@@ -1,6 +1,7 @@
 """Data storage utilities for NutriFit."""
 
 import json
+import shutil
 from datetime import date, datetime
 from pathlib import Path
 from typing import Any, TypeVar
@@ -346,8 +347,6 @@ class DataStorage:
 
     def clear_all_data(self) -> None:
         """Clear all stored data. Use with caution!"""
-        import shutil
-
         for subdir in ["users", "meal_plans", "workout_plans", "progress"]:
             dir_path = self.data_dir / subdir
             if dir_path.exists():

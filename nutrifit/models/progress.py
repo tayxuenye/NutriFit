@@ -1,7 +1,7 @@
 """Progress tracking models."""
 
 from dataclasses import dataclass, field
-from datetime import date, datetime
+from datetime import date, datetime, timedelta
 
 
 @dataclass
@@ -89,8 +89,6 @@ class ProgressTracker:
             return None
 
         # Get entries from last N days
-        from datetime import timedelta
-
         cutoff_date = date.today() - timedelta(days=days)
         recent_entries = [e for e in weight_entries if e.date >= cutoff_date]
 
@@ -103,8 +101,6 @@ class ProgressTracker:
 
     def get_average_calories(self, days: int = 7) -> float | None:
         """Calculate average calories consumed over specified days."""
-        from datetime import timedelta
-
         cutoff_date = date.today() - timedelta(days=days)
         calorie_entries = [
             e for e in self.entries
@@ -119,8 +115,6 @@ class ProgressTracker:
 
     def get_workout_adherence(self, days: int = 7) -> float:
         """Calculate workout adherence percentage over specified days."""
-        from datetime import timedelta
-
         cutoff_date = date.today() - timedelta(days=days)
         recent_entries = [e for e in self.entries if e.date >= cutoff_date]
 

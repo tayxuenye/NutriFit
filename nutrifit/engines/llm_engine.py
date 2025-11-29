@@ -1,5 +1,6 @@
 """Local LLM engine for creative suggestions."""
 
+import random
 from pathlib import Path
 
 
@@ -100,8 +101,6 @@ class LocalLLMEngine:
             ],
         }
 
-        import random
-
         options = suggestions.get(meal_type.lower(), suggestions["lunch"])
         return random.choice(options)
 
@@ -126,8 +125,6 @@ class LocalLLMEngine:
             f"An interval-based {difficulty} session focusing on {goals} with {equipment} "
             f"is perfect for your {duration_minutes}-minute time frame.",
         ]
-
-        import random
 
         return random.choice(suggestions)
 

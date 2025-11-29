@@ -1,6 +1,7 @@
 """Embedding engine for semantic search and matching."""
 
 import hashlib
+import re
 from pathlib import Path
 
 import numpy as np
@@ -49,8 +50,6 @@ class EmbeddingEngine:
 
     def _simple_tokenize(self, text: str) -> list[str]:
         """Simple tokenization for fallback embeddings."""
-        import re
-
         # Convert to lowercase and split on non-alphanumeric
         text = text.lower()
         tokens = re.findall(r"[a-z0-9]+", text)
