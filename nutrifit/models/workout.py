@@ -128,6 +128,51 @@ class Exercise:
             f"Equipment: {equipment}. "
             f"Difficulty: {self.difficulty}."
         )
+    
+    def validate(self) -> None:
+        """Validate exercise data for integrity.
+        
+        Raises:
+            ValueError: If any validation check fails.
+        """
+        if not self.id or not self.id.strip():
+            raise ValueError("Exercise ID cannot be empty")
+        
+        if not self.name or not self.name.strip():
+            raise ValueError("Exercise name cannot be empty")
+        
+        if not self.muscle_groups:
+            raise ValueError("Exercise must target at least one muscle group")
+        
+        if self.sets <= 0:
+            raise ValueError("Sets must be positive")
+        
+        if self.reps is not None and self.reps <= 0:
+            raise ValueError("Reps must be positive if specified")
+        
+        if self.duration_seconds is not None and self.duration_seconds <= 0:
+            raise ValueError("Duration must be positive if specified")
+        
+        if self.rest_seconds < 0:
+            raise ValueError("Rest time cannot be negative")
+        
+        if self.difficulty not in ["beginner", "intermediate", "advanced"]:
+            raise ValueError("Difficulty must be beginner, intermediate, or advanced")
+        
+        if self.calories_per_minute < 0:
+            raise ValueError("Calories per minute cannot be negative")
+    
+    def is_valid_structure(self) -> bool:
+        """Check if the data structure is valid for persistence.
+        
+        Returns:
+            bool: True if structure is valid, False otherwise.
+        """
+        try:
+            self.validate()
+            return True
+        except (ValueError, TypeError, AttributeError):
+            return False
 
 
 @dataclass
@@ -219,3 +264,46 @@ class Workout:
             f"Difficulty: {self.difficulty}. "
             f"Duration: {self.total_duration_minutes} minutes."
         )
+    
+    def validate(self) -> None:
+        """Validate workout data for integrity.
+        
+        Raises:
+            ValueError: If any validation check fails.
+        """
+        if not self.id or not self.id.strip():
+            raise ValueError("Workout ID cannot be empty")
+        
+        if not self.name or not self.name.strip():
+            raise ValueError("Workout name cannot be empty")
+        
+        if not self.exercises:
+            raise ValueError("Workout must have at least one exercise")
+        
+        if self.duration_minutes <= 0:
+            raise ValueError("Duration must be positive")
+        
+        if self.warmup_minutes < 0:
+            raise ValueError("Warmup time cannot be negative")
+        
+        if self.cooldown_minutes < 0:
+            raise ValueError("Cooldown time cannot be negative")
+        
+        if self.difficulty not in ["beginner", "intermediate", "advanced"]:
+            raise ValueError("Difficulty must be beginner, intermediate, or advanced")
+        
+        # Validate each exercise
+        for exercise in self.exercises:
+            exercise.validate()
+    
+    def is_valid_structure(self) -> bool:
+        """Check if the data structure is valid for persistence.
+        
+        Returns:
+            bool: True if structure is valid, False otherwise.
+        """
+        try:
+            self.validate()
+            return True
+        except (ValueError, TypeError, AttributeError):
+            return False

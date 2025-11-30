@@ -52,6 +52,8 @@ class TestUserProfile:
             height_cm=175.0,
             fitness_goals=[FitnessGoal.WEIGHT_LOSS],
         )
+        assert profile_weight_loss.daily_calorie_target is not None
+        assert profile_normal.daily_calorie_target is not None
         assert profile_weight_loss.daily_calorie_target < profile_normal.daily_calorie_target
 
     def test_user_profile_serialization(self):

@@ -82,6 +82,38 @@ class DailyMealPlan:
             snacks=[Recipe.from_dict(s) for s in data.get("snacks", [])],
             notes=data.get("notes", ""),
         )
+    
+    def validate(self) -> None:
+        """Validate daily meal plan data for integrity.
+        
+        Raises:
+            ValueError: If any validation check fails.
+        """
+        # Validate that at least one meal is present
+        if not self.breakfast and not self.lunch and not self.dinner and not self.snacks:
+            raise ValueError("Daily meal plan must have at least one meal")
+        
+        # Validate each recipe if present
+        if self.breakfast:
+            self.breakfast.validate()
+        if self.lunch:
+            self.lunch.validate()
+        if self.dinner:
+            self.dinner.validate()
+        for snack in self.snacks:
+            snack.validate()
+    
+    def is_valid_structure(self) -> bool:
+        """Check if the data structure is valid for persistence.
+        
+        Returns:
+            bool: True if structure is valid, False otherwise.
+        """
+        try:
+            self.validate()
+            return True
+        except (ValueError, TypeError, AttributeError):
+            return False
 
 
 @dataclass
@@ -146,6 +178,40 @@ class MealPlan:
             target_calories_per_day=data.get("target_calories_per_day", 2000),
             notes=data.get("notes", ""),
         )
+    
+    def validate(self) -> None:
+        """Validate meal plan data for integrity.
+        
+        Raises:
+            ValueError: If any validation check fails.
+        """
+        if not self.id or not self.id.strip():
+            raise ValueError("Meal plan ID cannot be empty")
+        
+        if not self.name or not self.name.strip():
+            raise ValueError("Meal plan name cannot be empty")
+        
+        if self.start_date > self.end_date:
+            raise ValueError("Start date must be before or equal to end date")
+        
+        if self.target_calories_per_day <= 0:
+            raise ValueError("Target calories must be positive")
+        
+        # Validate each daily plan
+        for daily_plan in self.daily_plans:
+            daily_plan.validate()
+    
+    def is_valid_structure(self) -> bool:
+        """Check if the data structure is valid for persistence.
+        
+        Returns:
+            bool: True if structure is valid, False otherwise.
+        """
+        try:
+            self.validate()
+            return True
+        except (ValueError, TypeError, AttributeError):
+            return False
 
 
 @dataclass
@@ -180,6 +246,33 @@ class DailyWorkoutPlan:
             is_rest_day=data.get("is_rest_day", False),
             notes=data.get("notes", ""),
         )
+    
+    def validate(self) -> None:
+        """Validate daily workout plan data for integrity.
+        
+        Raises:
+            ValueError: If any validation check fails.
+        """
+        # If it's a rest day, there should be no workouts
+        if self.is_rest_day and self.workouts:
+            raise ValueError("Rest day cannot have workouts")
+        
+        # If it's not a rest day, validate workouts
+        if not self.is_rest_day:
+            for workout in self.workouts:
+                workout.validate()
+    
+    def is_valid_structure(self) -> bool:
+        """Check if the data structure is valid for persistence.
+        
+        Returns:
+            bool: True if structure is valid, False otherwise.
+        """
+        try:
+            self.validate()
+            return True
+        except (ValueError, TypeError, AttributeError):
+            return False
 
 
 @dataclass
@@ -241,3 +334,37 @@ class WorkoutPlan:
             workout_days_per_week=data.get("workout_days_per_week", 4),
             notes=data.get("notes", ""),
         )
+    
+    def validate(self) -> None:
+        """Validate workout plan data for integrity.
+        
+        Raises:
+            ValueError: If any validation check fails.
+        """
+        if not self.id or not self.id.strip():
+            raise ValueError("Workout plan ID cannot be empty")
+        
+        if not self.name or not self.name.strip():
+            raise ValueError("Workout plan name cannot be empty")
+        
+        if self.start_date > self.end_date:
+            raise ValueError("Start date must be before or equal to end date")
+        
+        if self.workout_days_per_week < 0 or self.workout_days_per_week > 7:
+            raise ValueError("Workout days per week must be between 0 and 7")
+        
+        # Validate each daily plan
+        for daily_plan in self.daily_plans:
+            daily_plan.validate()
+    
+    def is_valid_structure(self) -> bool:
+        """Check if the data structure is valid for persistence.
+        
+        Returns:
+            bool: True if structure is valid, False otherwise.
+        """
+        try:
+            self.validate()
+            return True
+        except (ValueError, TypeError, AttributeError):
+            return False

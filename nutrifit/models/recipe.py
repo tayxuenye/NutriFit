@@ -137,3 +137,52 @@ class Recipe:
             f"Tags: {tags}. Dietary info: {dietary}. "
             f"Meal type: {self.meal_type}."
         )
+    
+    def validate(self) -> None:
+        """Validate recipe data for integrity.
+        
+        Raises:
+            ValueError: If any validation check fails.
+        """
+        if not self.id or not self.id.strip():
+            raise ValueError("Recipe ID cannot be empty")
+        
+        if not self.name or not self.name.strip():
+            raise ValueError("Recipe name cannot be empty")
+        
+        if not self.ingredients:
+            raise ValueError("Recipe must have at least one ingredient")
+        
+        if not self.instructions:
+            raise ValueError("Recipe must have at least one instruction")
+        
+        if self.prep_time_minutes < 0:
+            raise ValueError("Prep time cannot be negative")
+        
+        if self.cook_time_minutes < 0:
+            raise ValueError("Cook time cannot be negative")
+        
+        if self.servings <= 0:
+            raise ValueError("Servings must be positive")
+        
+        if self.meal_type not in ["breakfast", "lunch", "dinner", "snack"]:
+            raise ValueError("Meal type must be breakfast, lunch, dinner, or snack")
+        
+        # Validate nutrition info
+        if self.nutrition.calories < 0:
+            raise ValueError("Calories cannot be negative")
+        
+        if self.nutrition.protein_g < 0 or self.nutrition.carbs_g < 0 or self.nutrition.fat_g < 0:
+            raise ValueError("Macronutrients cannot be negative")
+    
+    def is_valid_structure(self) -> bool:
+        """Check if the data structure is valid for persistence.
+        
+        Returns:
+            bool: True if structure is valid, False otherwise.
+        """
+        try:
+            self.validate()
+            return True
+        except (ValueError, TypeError, AttributeError):
+            return False

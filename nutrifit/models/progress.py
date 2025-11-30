@@ -46,6 +46,58 @@ class ProgressEntry:
         data["date"] = date.fromisoformat(data["date"])
         data["created_at"] = datetime.fromisoformat(data["created_at"])
         return cls(**data)
+    
+    def validate(self) -> None:
+        """Validate progress entry data for integrity.
+        
+        Raises:
+            ValueError: If any validation check fails.
+        """
+        if self.weight_kg is not None and (self.weight_kg <= 0 or self.weight_kg > 500):
+            raise ValueError("Weight must be between 0 and 500 kg")
+        
+        if self.body_fat_percentage is not None and (
+            self.body_fat_percentage < 0 or self.body_fat_percentage > 100
+        ):
+            raise ValueError("Body fat percentage must be between 0 and 100")
+        
+        if self.calories_consumed is not None and self.calories_consumed < 0:
+            raise ValueError("Calories consumed cannot be negative")
+        
+        if self.calories_burned is not None and self.calories_burned < 0:
+            raise ValueError("Calories burned cannot be negative")
+        
+        if self.workouts_completed < 0:
+            raise ValueError("Workouts completed cannot be negative")
+        
+        if self.meals_followed < 0:
+            raise ValueError("Meals followed cannot be negative")
+        
+        if self.water_intake_ml is not None and self.water_intake_ml < 0:
+            raise ValueError("Water intake cannot be negative")
+        
+        if self.sleep_hours is not None and (self.sleep_hours < 0 or self.sleep_hours > 24):
+            raise ValueError("Sleep hours must be between 0 and 24")
+        
+        if self.mood_rating is not None and (self.mood_rating < 1 or self.mood_rating > 10):
+            raise ValueError("Mood rating must be between 1 and 10")
+        
+        if self.energy_rating is not None and (
+            self.energy_rating < 1 or self.energy_rating > 10
+        ):
+            raise ValueError("Energy rating must be between 1 and 10")
+    
+    def is_valid_structure(self) -> bool:
+        """Check if the data structure is valid for persistence.
+        
+        Returns:
+            bool: True if structure is valid, False otherwise.
+        """
+        try:
+            self.validate()
+            return True
+        except (ValueError, TypeError, AttributeError):
+            return False
 
 
 @dataclass
@@ -158,3 +210,28 @@ class ProgressTracker:
             entries=[ProgressEntry.from_dict(e) for e in data.get("entries", [])],
             goals=data.get("goals", {}),
         )
+    
+    def validate(self) -> None:
+        """Validate progress tracker data for integrity.
+        
+        Raises:
+            ValueError: If any validation check fails.
+        """
+        if not self.user_id or not self.user_id.strip():
+            raise ValueError("User ID cannot be empty")
+        
+        # Validate each entry
+        for entry in self.entries:
+            entry.validate()
+    
+    def is_valid_structure(self) -> bool:
+        """Check if the data structure is valid for persistence.
+        
+        Returns:
+            bool: True if structure is valid, False otherwise.
+        """
+        try:
+            self.validate()
+            return True
+        except (ValueError, TypeError, AttributeError):
+            return False

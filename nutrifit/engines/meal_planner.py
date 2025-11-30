@@ -3,6 +3,7 @@
 import random
 import uuid
 from datetime import date, timedelta
+from typing import Any
 
 from nutrifit.data.recipes import get_sample_recipes
 from nutrifit.engines.embedding_engine import EmbeddingEngine
@@ -34,9 +35,9 @@ class MealPlannerEngine:
             recipes: List of available recipes (defaults to sample recipes)
         """
         self.embedding_engine = embedding_engine or EmbeddingEngine()
-        self.llm_engine = llm_engine or LocalLLMEngine(use_fallback=True)
+        self.llm_engine = llm_engine or LocalLLMEngine()
         self.recipes = recipes or get_sample_recipes()
-        self._recipe_embeddings: dict[str, any] = {}
+        self._recipe_embeddings: dict[str, Any] = {}
         self._initialize_recipe_embeddings()
 
     def _initialize_recipe_embeddings(self) -> None:
@@ -59,41 +60,61 @@ class MealPlannerEngine:
     def _filter_recipes_by_diet(
         self, recipes: list[Recipe], dietary_filters: list[str]
     ) -> list[Recipe]:
-        """Filter recipes based on dietary preferences."""
+        """Filter recipes based on dietary preferences.
+        
+        Implements strict filtering logic:
+        - Vegan recipes must be marked as vegan
+        - Vegetarian recipes can be vegan or vegetarian
+        - Other preferences require exact match in dietary_info
+        """
         if not dietary_filters:
             return recipes
 
         filtered = []
         for recipe in recipes:
-            # Check if recipe matches dietary preferences
+            # Check if recipe matches ALL dietary preferences
             matches = True
             for diet_filter in dietary_filters:
                 if diet_filter == "vegetarian":
+                    # Vegetarian accepts both vegetarian and vegan recipes
                     if not any(
                         d in ["vegetarian", "vegan"] for d in recipe.dietary_info
                     ):
                         matches = False
                         break
                 elif diet_filter == "vegan":
+                    # Vegan requires strict vegan marking
                     if "vegan" not in recipe.dietary_info:
                         matches = False
                         break
-                elif diet_filter not in recipe.dietary_info:
-                    # For other preferences, check direct match
-                    if diet_filter in ["keto", "low_carb", "high_protein", "paleo",
-                                       "gluten_free", "dairy_free", "pescatarian"]:
-                        if diet_filter not in recipe.dietary_info:
-                            matches = False
-                            break
+                elif diet_filter == "pescatarian":
+                    # Pescatarian accepts pescatarian, vegetarian, and vegan
+                    if not any(
+                        d in ["pescatarian", "vegetarian", "vegan"] 
+                        for d in recipe.dietary_info
+                    ):
+                        matches = False
+                        break
+                else:
+                    # For other preferences (keto, paleo, gluten_free, dairy_free, etc.)
+                    # require exact match in dietary_info
+                    if diet_filter not in recipe.dietary_info:
+                        matches = False
+                        break
+            
             if matches:
                 filtered.append(recipe)
 
-        return filtered if filtered else recipes  # Fall back to all if none match
+        return filtered
 
     def _filter_recipes_by_allergies(
         self, recipes: list[Recipe], allergies: list[str]
     ) -> list[Recipe]:
-        """Filter out recipes containing allergens."""
+        """Filter out recipes containing allergens.
+        
+        Strictly excludes any recipe that contains any allergen.
+        Returns empty list if all recipes contain allergens.
+        """
         if not allergies:
             return recipes
 
@@ -107,7 +128,7 @@ class MealPlannerEngine:
             if not contains_allergen:
                 filtered.append(recipe)
 
-        return filtered if filtered else recipes
+        return filtered
 
     def _get_recipes_by_meal_type(
         self, recipes: list[Recipe], meal_type: str
@@ -118,21 +139,34 @@ class MealPlannerEngine:
     def _score_recipe_for_pantry(
         self, recipe: Recipe, pantry_items: list[str]
     ) -> float:
-        """Score a recipe based on how many pantry items it uses."""
+        """Score a recipe based on how many pantry items it uses.
+        
+        Returns a score between 0 and 1, where:
+        - 1.0 means all ingredients are in pantry
+        - 0.0 means no ingredients are in pantry
+        - 0.5 is default when pantry is empty
+        
+        This ensures recipes with more pantry ingredients score higher.
+        """
         if not pantry_items:
             return 0.5
 
         recipe_ingredients = recipe.get_ingredient_names()
-        pantry_lower = [p.lower() for p in pantry_items]
+        if not recipe_ingredients:
+            return 0.0
+        
+        pantry_lower = [p.lower().strip() for p in pantry_items]
 
         matches = 0
         for ingredient in recipe_ingredients:
+            ingredient_lower = ingredient.lower().strip()
             for pantry_item in pantry_lower:
-                if pantry_item in ingredient or ingredient in pantry_item:
+                # Check for substring match in both directions
+                if pantry_item in ingredient_lower or ingredient_lower in pantry_item:
                     matches += 1
                     break
 
-        return matches / len(recipe_ingredients) if recipe_ingredients else 0
+        return matches / len(recipe_ingredients)
 
     def find_matching_recipes(
         self,
@@ -195,6 +229,7 @@ class MealPlannerEngine:
         meal_type: str,
         target_calories: int,
         used_recipe_ids: set[str],
+        calorie_tolerance: float = 0.3,
     ) -> Recipe | None:
         """Select a single recipe for a meal.
 
@@ -203,6 +238,7 @@ class MealPlannerEngine:
             meal_type: Type of meal
             target_calories: Target calories for this meal
             used_recipe_ids: Set of already used recipe IDs
+            calorie_tolerance: Tolerance for calorie matching (default 30%)
 
         Returns:
             Selected recipe or None
@@ -218,9 +254,9 @@ class MealPlannerEngine:
         if not available:
             return None
 
-        # Filter by calorie target (within 30% range)
-        min_cal = target_calories * 0.7
-        max_cal = target_calories * 1.3
+        # Filter by calorie target with specified tolerance
+        min_cal = target_calories * (1 - calorie_tolerance)
+        max_cal = target_calories * (1 + calorie_tolerance)
 
         calorie_appropriate = [
             (r, s)

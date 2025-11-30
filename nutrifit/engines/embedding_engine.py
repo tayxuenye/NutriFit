@@ -15,15 +15,24 @@ class EmbeddingEngine:
     for offline semantic matching without heavy model dependencies.
     """
 
-    def __init__(self, cache_dir: Path | None = None):
+    def __init__(
+        self,
+        cache_dir: Path | None = None,
+        max_cache_size_mb: int = 100,
+        max_memory_cache_items: int = 1000,
+    ):
         """Initialize the embedding engine.
 
         Args:
             cache_dir: Directory for caching embeddings. Defaults to ~/.nutrifit/embeddings
+            max_cache_size_mb: Maximum disk cache size in MB (default: 100)
+            max_memory_cache_items: Maximum number of items in memory cache (default: 1000)
         """
         self.cache_dir = cache_dir or Path.home() / ".nutrifit" / "embeddings"
         self.cache_dir.mkdir(parents=True, exist_ok=True)
         self._embeddings_cache: dict[str, np.ndarray] = {}
+        self._max_cache_size_mb = max_cache_size_mb
+        self._max_memory_cache_items = max_memory_cache_items
         self._model = None
         self._model_name = "all-MiniLM-L6-v2"
         self._use_transformer = False
@@ -33,6 +42,10 @@ class EmbeddingEngine:
 
     def _initialize_model(self) -> None:
         """Initialize the embedding model."""
+        # Always initialize vocab for fallback mode
+        self._vocab: dict[str, int] = {}
+        self._idf: dict[str, float] = {}
+
         try:
             from sentence_transformers import SentenceTransformer
 
@@ -41,8 +54,6 @@ class EmbeddingEngine:
         except ImportError:
             # Fall back to simple word-based embeddings
             self._use_transformer = False
-            self._vocab: dict[str, int] = {}
-            self._idf: dict[str, float] = {}
 
     def _get_cache_key(self, text: str) -> str:
         """Generate cache key for text."""
@@ -109,9 +120,13 @@ class EmbeddingEngine:
         else:
             embedding = self._simple_embed(text)
 
-        # Cache the embedding
-        self._embeddings_cache[cache_key] = embedding
-        np.save(cache_file, embedding)
+        # Cache the embedding only if use_cache is True
+        if use_cache:
+            self._embeddings_cache[cache_key] = embedding
+            np.save(cache_file, embedding)
+
+            # Enforce cache limits
+            self._enforce_cache_limits()
 
         return embedding
 
@@ -160,10 +175,15 @@ class EmbeddingEngine:
                 indices_to_embed, texts_to_embed, new_embeddings, strict=False
             ):
                 cache_key = self._get_cache_key(text)
-                self._embeddings_cache[cache_key] = embedding
-                cache_file = self.cache_dir / f"{cache_key}.npy"
-                np.save(cache_file, embedding)
+                if use_cache:
+                    self._embeddings_cache[cache_key] = embedding
+                    cache_file = self.cache_dir / f"{cache_key}.npy"
+                    np.save(cache_file, embedding)
                 embeddings.append((idx, embedding))
+
+            # Enforce cache limits after batch operation
+            if use_cache:
+                self._enforce_cache_limits()
 
         # Sort by original index and stack
         embeddings.sort(key=lambda x: x[0])
@@ -226,3 +246,62 @@ class EmbeddingEngine:
         self._embeddings_cache.clear()
         for cache_file in self.cache_dir.glob("*.npy"):
             cache_file.unlink()
+
+    def get_cache_size_mb(self) -> float:
+        """Get current disk cache size in MB.
+
+        Returns:
+            Cache size in megabytes
+        """
+        total_size = sum(
+            f.stat().st_size for f in self.cache_dir.glob("*.npy") if f.is_file()
+        )
+        return total_size / (1024 * 1024)
+
+    def get_cache_stats(self) -> dict[str, int | float]:
+        """Get cache statistics.
+
+        Returns:
+            Dictionary with cache statistics
+        """
+        disk_files = list(self.cache_dir.glob("*.npy"))
+        return {
+            "memory_cache_items": len(self._embeddings_cache),
+            "disk_cache_files": len(disk_files),
+            "disk_cache_size_mb": self.get_cache_size_mb(),
+            "max_cache_size_mb": self._max_cache_size_mb,
+            "max_memory_cache_items": self._max_memory_cache_items,
+        }
+
+    def _enforce_cache_limits(self) -> None:
+        """Enforce cache size limits by removing oldest entries."""
+        # Enforce memory cache limit
+        if len(self._embeddings_cache) > self._max_memory_cache_items:
+            # Remove oldest entries (simple FIFO)
+            items_to_remove = (
+                len(self._embeddings_cache) - self._max_memory_cache_items
+            )
+            keys_to_remove = list(self._embeddings_cache.keys())[:items_to_remove]
+            for key in keys_to_remove:
+                del self._embeddings_cache[key]
+
+        # Enforce disk cache limit
+        current_size_mb = self.get_cache_size_mb()
+        if current_size_mb > self._max_cache_size_mb:
+            # Remove oldest files by modification time
+            cache_files = sorted(
+                self.cache_dir.glob("*.npy"), key=lambda f: f.stat().st_mtime
+            )
+            for cache_file in cache_files:
+                cache_file.unlink()
+                current_size_mb = self.get_cache_size_mb()
+                if current_size_mb <= self._max_cache_size_mb * 0.8:  # 80% threshold
+                    break
+
+    def is_using_transformer(self) -> bool:
+        """Check if using transformer model or fallback.
+
+        Returns:
+            True if using transformer model, False if using fallback
+        """
+        return self._use_transformer

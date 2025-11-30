@@ -1,0 +1,2791 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>NutriFit - AI Nutrition & Workout Assistant</title>
+    <style>
+        /* ===== CSS Variables ===== */
+        :root {
+            --primary: #6366f1;
+            --primary-dark: #4f46e5;
+            --primary-light: #a5b4fc;
+            --success: #10b981;
+            --error: #ef4444;
+            --warning: #f59e0b;
+            --bg: #f8fafc;
+            --surface: #ffffff;
+            --text-primary: #1e293b;
+            --text-secondary: #64748b;
+            --border: #e2e8f0;
+            --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+            --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+            --radius: 12px;
+            --radius-lg: 16px;
+            --spacing-xs: 4px;
+            --spacing-sm: 8px;
+            --spacing-md: 12px;
+            --spacing-lg: 16px;
+            --spacing-xl: 20px;
+            --spacing-2xl: 24px;
+        }
+
+        /* ===== Reset & Base ===== */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: var(--bg);
+            color: var(--text-primary);
+            line-height: 1.5;
+            -webkit-font-smoothing: antialiased;
+            padding-bottom: 80px;
+            /* Space for bottom nav */
+        }
+
+        /* ===== Layout ===== */
+        .app-container {
+            max-width: 600px;
+            margin: 0 auto;
+            min-height: 100vh;
+            background: var(--bg);
+            box-shadow: 0 0 0 1px var(--border);
+        }
+
+        .header-wrapper {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            position: sticky;
+            top: 0;
+            z-index: 50;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .header {
+            max-width: 600px;
+            margin: 0 auto;
+            color: white;
+            padding: var(--spacing-xl) var(--spacing-lg);
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 1.75rem;
+            font-weight: 700;
+            margin-bottom: var(--spacing-xs);
+        }
+
+        .header p {
+            font-size: 0.875rem;
+            opacity: 0.9;
+        }
+
+        /* ===== Tabs Content ===== */
+        .tab-content {
+            display: none;
+            padding: var(--spacing-lg);
+            animation: fadeIn 0.2s ease-in;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        /* ===== Screen Navigation ===== */
+        .screen {
+            display: none;
+            animation: fadeIn 0.2s ease-in;
+        }
+
+        .screen.active {
+            display: block;
+        }
+
+        .screen-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: var(--spacing-lg);
+            padding-bottom: var(--spacing-md);
+            border-bottom: 1px solid var(--border);
+        }
+
+        .screen-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            flex: 1;
+        }
+
+        .btn-back {
+            background: none;
+            border: none;
+            color: var(--primary);
+            font-size: 1.25rem;
+            cursor: pointer;
+            padding: var(--spacing-sm);
+            margin-right: var(--spacing-md);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            transition: background 0.2s;
+        }
+
+        .btn-back:hover {
+            background: var(--bg);
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(8px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* ===== Modal/Popup ===== */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+            padding: var(--spacing-lg);
+            animation: fadeIn 0.2s ease-in;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: var(--surface);
+            border-radius: var(--radius-lg);
+            padding: var(--spacing-xl);
+            max-width: 500px;
+            width: 100%;
+            max-height: 80vh;
+            overflow-y: auto;
+            box-shadow: var(--shadow-lg);
+            animation: slideUp 0.3s ease-out;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: var(--spacing-lg);
+            padding-bottom: var(--spacing-md);
+            border-bottom: 1px solid var(--border);
+        }
+
+        .modal-title {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            color: var(--text-secondary);
+            cursor: pointer;
+            padding: var(--spacing-xs);
+            line-height: 1;
+            transition: color 0.2s;
+        }
+
+        .modal-close:hover {
+            color: var(--text-primary);
+        }
+
+        .modal-body {
+            color: var(--text-primary);
+        }
+
+        .instructions-list {
+            list-style: decimal;
+            padding-left: var(--spacing-xl);
+            margin: var(--spacing-md) 0;
+        }
+
+        .instructions-list li {
+            margin-bottom: var(--spacing-sm);
+            line-height: 1.6;
+        }
+
+        /* ===== Bottom Navigation ===== */
+        .bottom-nav-wrapper {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: var(--surface);
+            border-top: 1px solid var(--border);
+            box-shadow: 0 -2px 12px rgba(0, 0, 0, 0.08);
+            z-index: 100;
+            backdrop-filter: blur(10px);
+        }
+
+        .bottom-nav {
+            max-width: 600px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-around;
+            padding: var(--spacing-xs) 0 calc(var(--spacing-xs) + env(safe-area-inset-bottom));
+            background: var(--surface);
+        }
+
+        .nav-item {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: var(--spacing-xs) var(--spacing-xs);
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 0.7rem;
+            font-weight: 500;
+            transition: all 0.2s ease;
+            border-radius: var(--radius);
+            margin: 0 2px;
+            position: relative;
+            min-width: 0;
+        }
+
+        .nav-item::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 0;
+            height: 3px;
+            background: var(--primary);
+            border-radius: 0 0 3px 3px;
+            transition: width 0.2s ease;
+        }
+
+        .nav-item.active {
+            color: var(--primary);
+        }
+
+        .nav-item.active::before {
+            width: 60%;
+        }
+
+        .nav-item:active {
+            background: var(--bg);
+            transform: scale(0.95);
+        }
+
+        .nav-item-icon {
+            font-size: 0.875rem;
+            transition: transform 0.2s ease;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 100%;
+        }
+
+        .nav-item.active .nav-item-icon {
+            transform: scale(1.05);
+        }
+
+        /* ===== Cards ===== */
+        .card {
+            background: var(--surface);
+            border-radius: var(--radius-lg);
+            padding: var(--spacing-lg);
+            margin-bottom: var(--spacing-lg);
+            box-shadow: var(--shadow-sm);
+            border: 1px solid var(--border);
+            overflow: hidden;
+            min-width: 0;
+        }
+
+        .card-header {
+            font-size: 1.125rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: var(--spacing-md);
+        }
+
+        /* ===== Buttons ===== */
+        .btn {
+            width: 100%;
+            padding: var(--spacing-md) var(--spacing-lg);
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: var(--radius);
+            font-size: 0.9375rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            margin-bottom: var(--spacing-md);
+        }
+
+        .btn:hover {
+            background: var(--primary-dark);
+            transform: translateY(-1px);
+            box-shadow: var(--shadow-md);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        .btn-secondary {
+            background: var(--text-secondary);
+        }
+
+        .btn-group {
+            display: flex;
+            gap: var(--spacing-md);
+        }
+
+        .btn-group .btn {
+            flex: 1;
+            margin-bottom: 0;
+        }
+
+        /* ===== Forms ===== */
+        .form-group {
+            margin-bottom: var(--spacing-lg);
+        }
+
+        .form-label {
+            display: block;
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: var(--spacing-sm);
+        }
+
+        .form-input,
+        .form-select,
+        .form-textarea {
+            width: 100%;
+            padding: var(--spacing-md);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            font-size: 0.9375rem;
+            font-family: inherit;
+            background: var(--surface);
+            transition: border-color 0.2s;
+        }
+
+        .form-input:focus,
+        .form-select:focus,
+        .form-textarea:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+        }
+
+        .form-textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
+
+        .form-help {
+            font-size: 0.8125rem;
+            color: var(--text-secondary);
+            margin-top: var(--spacing-xs);
+        }
+
+        /* ===== Checkboxes ===== */
+        .checkbox-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: var(--spacing-sm);
+        }
+
+        .checkbox-item {
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-sm);
+            padding: var(--spacing-sm) var(--spacing-md);
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .checkbox-item:hover {
+            border-color: var(--primary-light);
+        }
+
+        .checkbox-item input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+            accent-color: var(--primary);
+        }
+
+        /* ===== Plan List ===== */
+        .plan-list {
+            margin-bottom: var(--spacing-lg);
+        }
+
+        .plan-item {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: var(--spacing-md);
+            margin-bottom: var(--spacing-md);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .plan-item:hover {
+            border-color: var(--primary);
+            box-shadow: var(--shadow-md);
+        }
+
+        .plan-item-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: var(--spacing-xs);
+        }
+
+        .plan-item-name {
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .plan-item-date {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+        }
+
+        .plan-item-meta {
+            font-size: 0.8125rem;
+            color: var(--text-secondary);
+        }
+
+        /* ===== Meal Cards (Collapsible) ===== */
+        .meal-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            margin-bottom: var(--spacing-md);
+            overflow: hidden;
+            transition: all 0.2s;
+        }
+
+        .meal-card-header {
+            padding: var(--spacing-md);
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-md);
+            cursor: pointer;
+        }
+
+        .meal-card-header:hover {
+            background: var(--bg);
+        }
+
+        .meal-icon {
+            font-size: 1.5rem;
+            flex-shrink: 0;
+        }
+
+        .meal-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .meal-name {
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: var(--spacing-xs);
+        }
+
+        .meal-macros {
+            display: flex;
+            gap: var(--spacing-md);
+            font-size: 0.8125rem;
+            color: var(--text-secondary);
+        }
+
+        .meal-calories {
+            background: var(--primary);
+            color: white;
+            padding: var(--spacing-xs) var(--spacing-md);
+            border-radius: 20px;
+            font-size: 0.8125rem;
+            font-weight: 600;
+            flex-shrink: 0;
+        }
+
+        .meal-card-body {
+            padding: 0 var(--spacing-md) var(--spacing-md);
+            display: none;
+        }
+
+        .meal-card.expanded .meal-card-body {
+            display: block;
+        }
+
+        .meal-description {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+            margin-bottom: var(--spacing-md);
+            line-height: 1.6;
+        }
+
+        .macro-summary {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: var(--spacing-sm);
+            margin-bottom: var(--spacing-md);
+            padding: var(--spacing-md);
+            background: var(--bg);
+            border-radius: var(--radius);
+        }
+
+        .macro-item {
+            text-align: center;
+        }
+
+        .macro-value {
+            font-size: 1.125rem;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .macro-label {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            margin-top: var(--spacing-xs);
+        }
+
+        .ingredients-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: var(--spacing-sm);
+            margin-bottom: var(--spacing-md);
+        }
+
+        .ingredient-tag {
+            background: var(--bg);
+            color: var(--text-primary);
+            padding: var(--spacing-xs) var(--spacing-md);
+            border-radius: 16px;
+            font-size: 0.8125rem;
+            border: 1px solid var(--border);
+        }
+
+        .meal-actions {
+            display: flex;
+            gap: var(--spacing-md);
+            padding-top: var(--spacing-md);
+            border-top: 1px solid var(--border);
+        }
+
+        .btn-accept,
+        .btn-reject {
+            flex: 1;
+            padding: var(--spacing-md);
+            border: none;
+            border-radius: var(--radius);
+            font-weight: 600;
+            font-size: 0.875rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-accept {
+            background: var(--success);
+            color: white;
+        }
+
+        .btn-accept:hover {
+            background: #059669;
+            transform: translateY(-1px);
+        }
+
+        .btn-reject {
+            background: var(--bg);
+            color: var(--text-secondary);
+            border: 1px solid var(--border);
+        }
+
+        .btn-reject:hover {
+            background: #fee2e2;
+            color: var(--error);
+            border-color: var(--error);
+        }
+
+        /* ===== Daily Totals ===== */
+        .daily-totals {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            color: white;
+            padding: var(--spacing-lg);
+            border-radius: var(--radius-lg);
+            margin-top: var(--spacing-lg);
+        }
+
+        .daily-totals-title {
+            font-size: 1rem;
+            font-weight: 600;
+            margin-bottom: var(--spacing-md);
+            text-align: center;
+        }
+
+        .totals-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: var(--spacing-md);
+        }
+
+        .total-item {
+            text-align: center;
+        }
+
+        .total-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+            display: block;
+        }
+
+        .total-label {
+            font-size: 0.75rem;
+            opacity: 0.9;
+            margin-top: var(--spacing-xs);
+        }
+
+        /* ===== Weekly Plan Cards ===== */
+        .day-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: var(--spacing-md);
+            margin-bottom: var(--spacing-md);
+        }
+
+        .day-header {
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: var(--spacing-md);
+            padding-bottom: var(--spacing-sm);
+            border-bottom: 1px solid var(--border);
+        }
+
+        .meal-summary {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: var(--spacing-sm) 0;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .meal-summary:last-child {
+            border-bottom: none;
+        }
+
+        .meal-summary-name {
+            font-weight: 500;
+            color: var(--text-primary);
+        }
+
+        .meal-summary-calories {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+        }
+
+        /* ===== Workout Cards ===== */
+        .workout-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: var(--spacing-md);
+            margin-bottom: var(--spacing-md);
+        }
+
+        .workout-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: var(--spacing-md);
+        }
+
+        .workout-name {
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .workout-badge {
+            background: var(--primary);
+            color: white;
+            padding: var(--spacing-xs) var(--spacing-md);
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .exercise-item {
+            padding: var(--spacing-md);
+            background: var(--bg);
+            border-radius: var(--radius);
+            margin-bottom: var(--spacing-sm);
+        }
+
+        .exercise-name {
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: var(--spacing-xs);
+        }
+
+        .exercise-details {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+        }
+
+        /* ===== Shopping List ===== */
+        .shopping-category {
+            margin-bottom: var(--spacing-lg);
+        }
+
+        .category-header {
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: var(--spacing-md);
+            padding-bottom: var(--spacing-sm);
+            border-bottom: 1px solid var(--border);
+        }
+
+        .shopping-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: var(--spacing-md);
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            margin-bottom: var(--spacing-sm);
+        }
+
+        .shopping-item-name {
+            flex: 1;
+            color: var(--text-primary);
+        }
+
+        .shopping-item-quantity {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+            margin-right: var(--spacing-md);
+        }
+
+        .shopping-actions {
+            display: flex;
+            gap: var(--spacing-sm);
+        }
+
+        /* ===== Progress ===== */
+        .progress-summary {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: var(--spacing-md);
+            margin-bottom: var(--spacing-lg);
+        }
+
+        .progress-stat {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: var(--spacing-md);
+            text-align: center;
+        }
+
+        .progress-stat-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--primary);
+        }
+
+        .progress-stat-label {
+            font-size: 0.8125rem;
+            color: var(--text-secondary);
+            margin-top: var(--spacing-xs);
+        }
+
+        /* ===== Status Badges ===== */
+        .status-badge {
+            display: inline-block;
+            padding: var(--spacing-xs) var(--spacing-md);
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .status-accepted {
+            background: #d1fae5;
+            color: #065f46;
+        }
+
+        .status-rejected {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        /* ===== Loading & Results ===== */
+        .loading {
+            text-align: center;
+            padding: var(--spacing-2xl);
+            color: var(--text-secondary);
+        }
+
+        .error {
+            background: #fee2e2;
+            color: #991b1b;
+            padding: var(--spacing-md);
+            border-radius: var(--radius);
+            margin-bottom: var(--spacing-md);
+        }
+
+        .result {
+            margin-top: var(--spacing-lg);
+        }
+
+        /* ===== Manual Entry Card ===== */
+        .manual-entry-card {
+            background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+            border: 1px solid #fbbf24;
+            border-radius: var(--radius-lg);
+            padding: var(--spacing-lg);
+            margin-bottom: var(--spacing-lg);
+        }
+
+        .manual-entry-card h3 {
+            font-size: 1rem;
+            font-weight: 600;
+            color: #92400e;
+            margin-bottom: var(--spacing-md);
+        }
+
+        /* ===== Toast Notifications ===== */
+        .toast {
+            position: fixed;
+            top: 80px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--surface);
+            color: var(--text-primary);
+            padding: var(--spacing-md) var(--spacing-lg);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow-lg);
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-md);
+            max-width: 90%;
+            animation: slideDown 0.3s ease-out;
+        }
+
+        .toast.success {
+            border-left: 4px solid var(--success);
+        }
+
+        .toast.info {
+            border-left: 4px solid var(--primary);
+        }
+
+        .toast.error {
+            border-left: 4px solid var(--error);
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateX(-50%) translateY(-20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateX(-50%) translateY(0);
+            }
+        }
+
+        /* ===== Responsive ===== */
+        @media (max-width: 480px) {
+            .header h1 {
+                font-size: 1.5rem;
+            }
+
+            .tab-content {
+                padding: var(--spacing-md);
+            }
+
+            .totals-grid {
+                grid-template-columns: repeat(3, 1fr);
+                gap: var(--spacing-sm);
+            }
+
+            .total-value {
+                font-size: 1.25rem;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Header -->
+    <div class="header-wrapper">
+        <div class="header">
+            <h1>NutriFit</h1>
+            <p>AI Nutrition & Workout Assistant</p>
+        </div>
+    </div>
+
+    <div class="app-container">
+
+        <!-- Profile Tab -->
+        <div id="profile" class="tab-content active">
+            <div class="card">
+                <h2 class="card-header">Your Profile</h2>
+                <form id="profileForm">
+                    <div class="form-group">
+                        <label class="form-label">Name</label>
+                        <input type="text" name="name" class="form-input" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Age</label>
+                        <input type="number" name="age" class="form-input" min="1" max="150" placeholder="e.g. 30"
+                            required>
+                        <span class="form-help">Your age in years</span>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Weight (kg)</label>
+                        <input type="number" name="weight_kg" class="form-input" step="0.1" min="1"
+                            placeholder="e.g. 70.5" required>
+                        <span class="form-help">Your current weight in kilograms</span>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Height (cm)</label>
+                        <input type="number" name="height_cm" class="form-input" min="1" placeholder="e.g. 175"
+                            required>
+                        <span class="form-help">Your height in centimeters</span>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Dietary Preferences</label>
+                        <div class="checkbox-group">
+                            <label class="checkbox-item">
+                                <input type="checkbox" name="dietary_preferences" value="vegetarian">
+                                <span>Vegetarian</span>
+                            </label>
+                            <label class="checkbox-item">
+                                <input type="checkbox" name="dietary_preferences" value="vegan">
+                                <span>Vegan</span>
+                            </label>
+                            <label class="checkbox-item">
+                                <input type="checkbox" name="dietary_preferences" value="keto">
+                                <span>Keto</span>
+                            </label>
+                            <label class="checkbox-item">
+                                <input type="checkbox" name="dietary_preferences" value="gluten_free">
+                                <span>Gluten-Free</span>
+                            </label>
+                            <label class="checkbox-item">
+                                <input type="checkbox" name="dietary_preferences" value="dairy_free">
+                                <span>Dairy-Free</span>
+                            </label>
+                            <label class="checkbox-item">
+                                <input type="checkbox" name="dietary_preferences" value="high_protein">
+                                <span>High Protein</span>
+                            </label>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Fitness Goals</label>
+                        <div class="checkbox-group">
+                            <label class="checkbox-item">
+                                <input type="checkbox" name="fitness_goals" value="weight_loss">
+                                <span>Weight Loss</span>
+                            </label>
+                            <label class="checkbox-item">
+                                <input type="checkbox" name="fitness_goals" value="muscle_gain">
+                                <span>Muscle Gain</span>
+                            </label>
+                            <label class="checkbox-item">
+                                <input type="checkbox" name="fitness_goals" value="maintenance">
+                                <span>Maintenance</span>
+                            </label>
+                            <label class="checkbox-item">
+                                <input type="checkbox" name="fitness_goals" value="endurance">
+                                <span>Endurance</span>
+                            </label>
+                            <label class="checkbox-item">
+                                <input type="checkbox" name="fitness_goals" value="strength">
+                                <span>Strength</span>
+                            </label>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Allergies (comma-separated)</label>
+                        <input type="text" name="allergies" class="form-input" placeholder="e.g. peanuts, shellfish">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Pantry Items (comma-separated)</label>
+                        <input type="text" name="pantry_items" class="form-input"
+                            placeholder="e.g. rice, pasta, olive oil">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Available Equipment (comma-separated)</label>
+                        <input type="text" name="available_equipment" class="form-input"
+                            placeholder="e.g. dumbbells, resistance bands">
+                    </div>
+                    <button type="submit" class="btn">Save Profile</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Meals Tab -->
+        <div id="meal" class="tab-content">
+            <div class="card">
+                <h2 class="card-header">Meal Plans</h2>
+                <div class="plan-list" id="mealPlanList">
+                    <div class="loading">Loading saved plans...</div>
+                </div>
+            </div>
+            <div class="card" style="margin-bottom: var(--spacing-lg);">
+                <div
+                    style="display: flex; align-items: center; justify-content: space-between; gap: var(--spacing-sm); min-width: 0;">
+                    <button class="btn btn-secondary" onclick="changeMealWeek(-1)"
+                        style="flex: 0 0 auto; width: auto; padding: var(--spacing-sm) var(--spacing-md); white-space: nowrap; min-width: 40px;">←</button>
+                    <div
+                        style="flex: 1; text-align: center; min-width: 0; overflow: hidden; padding: 0 var(--spacing-sm);">
+                        <div id="mealWeekDisplay"
+                            style="font-weight: 600; font-size: 0.875rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                        </div>
+                        <small style="color: var(--text-secondary); font-size: 0.75rem;">Week</small>
+                    </div>
+                    <button class="btn btn-secondary" onclick="changeMealWeek(1)"
+                        style="flex: 0 0 auto; width: auto; padding: var(--spacing-sm) var(--spacing-md); white-space: nowrap; min-width: 40px;">→</button>
+                </div>
+                <input type="hidden" id="mealWeekSelector" value="">
+            </div>
+            <div class="btn-group">
+                <button class="btn" onclick="generateWeeklyMeal()">Generate Weekly Plan</button>
+            </div>
+            <div id="mealResult" class="result"></div>
+
+        </div>
+
+        <!-- Workouts Tab -->
+        <div id="workout" class="tab-content">
+            <!-- Workout Plans -->
+            <div class="card">
+                <h2 class="card-header">Workout Plans</h2>
+                <div class="plan-list" id="workoutPlanList">
+                    <div class="loading">Loading saved plans...</div>
+                </div>
+                <div class="card" style="margin-bottom: var(--spacing-lg);">
+                    <div
+                        style="display: flex; align-items: center; justify-content: space-between; gap: var(--spacing-sm); min-width: 0;">
+                        <button class="btn btn-secondary" onclick="changeWorkoutWeek(-1)"
+                            style="flex: 0 0 auto; width: auto; padding: var(--spacing-sm) var(--spacing-md); white-space: nowrap; min-width: 40px;">←</button>
+                        <div
+                            style="flex: 1; text-align: center; min-width: 0; overflow: hidden; padding: 0 var(--spacing-sm);">
+                            <div id="workoutWeekDisplay"
+                                style="font-weight: 600; font-size: 0.875rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                            </div>
+                            <small style="color: var(--text-secondary); font-size: 0.75rem;">Week</small>
+                        </div>
+                        <button class="btn btn-secondary" onclick="changeWorkoutWeek(1)"
+                            style="flex: 0 0 auto; width: auto; padding: var(--spacing-sm) var(--spacing-md); white-space: nowrap; min-width: 40px;">→</button>
+                    </div>
+                    <input type="hidden" id="workoutWeekSelector" value="">
+                </div>
+                <div class="btn-group">
+                    <button class="btn" onclick="generateWeeklyWorkout()">Generate Weekly Plan</button>
+                </div>
+                <div id="workoutResult" class="result"></div>
+            </div>
+        </div>
+
+        <!-- Shopping Tab -->
+        <div id="shopping" class="tab-content">
+            <!-- Manual Entry -->
+            <div class="card">
+                <h2 class="card-header">Log What You Bought</h2>
+                <form id="shoppingEntryForm" onsubmit="saveManualShopping(event); return false;">
+                    <div class="form-group">
+                        <label class="form-label">Category *</label>
+                        <input type="text" id="shoppingCategory" class="form-input" list="categoryList" required
+                            placeholder="e.g. Produce, Meat, Dairy">
+                        <datalist id="categoryList"></datalist>
+                        <span class="form-help">Enter existing category or create new one</span>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Item Name *</label>
+                        <input type="text" id="shoppingItemName" class="form-input" required
+                            placeholder="e.g. Chicken breast">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Amount *</label>
+                        <div style="display: flex; gap: var(--spacing-sm);">
+                            <input type="number" id="shoppingQuantity" class="form-input" step="0.1" required
+                                placeholder="Quantity" style="flex: 1;">
+                            <input type="text" id="shoppingUnit" class="form-input" required
+                                placeholder="Unit (e.g. kg, lb, pcs)" style="flex: 1;">
+                        </div>
+                    </div>
+                    <button type="submit" class="btn" style="background: var(--success);">Add Item</button>
+                </form>
+            </div>
+
+            <!-- Shopping List -->
+            <div class="card">
+                <h2 class="card-header">Shopping List</h2>
+                <div id="shoppingResult" class="result"></div>
+            </div>
+        </div>
+
+        <!-- Progress Tab -->
+        <div id="progress" class="tab-content">
+            <div class="card">
+                <h2 class="card-header">Progress Tracking</h2>
+                <p class="form-help" style="margin-bottom: var(--spacing-lg);">Log your daily progress. All fields are
+                    optional.</p>
+                <form id="progressForm">
+                    <div class="form-group">
+                        <label class="form-label">Weight (kg)</label>
+                        <input type="number" name="weight_kg" class="form-input" step="0.1" placeholder="e.g. 70.5">
+                        <span class="form-help">Your weight today</span>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Calories Consumed</label>
+                        <input type="number" name="calories_consumed" class="form-input" placeholder="e.g. 2000">
+                        <span class="form-help">Total calories eaten today</span>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Workouts Completed</label>
+                        <input type="number" name="workouts_completed" class="form-input" placeholder="e.g. 1">
+                        <span class="form-help">Number of workouts today</span>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Meals Followed</label>
+                        <input type="number" name="meals_followed" class="form-input" placeholder="e.g. 3">
+                        <span class="form-help">Meals from your plan</span>
+                    </div>
+                    <button type="submit" class="btn">Log Progress</button>
+                </form>
+            </div>
+            <div class="card">
+                <h2 class="card-header">📈 Summary</h2>
+                <button class="btn btn-secondary" onclick="getProgressSummary()">View Summary</button>
+                <div id="progressResult" class="result"></div>
+            </div>
+        </div>
+
+        <!-- Modal for Instructions/Details -->
+        <div id="modalOverlay" class="modal-overlay" onclick="closeModal(event)">
+            <div class="modal-content" onclick="event.stopPropagation()">
+                <div class="modal-header">
+                    <h3 class="modal-title" id="modalTitle">Details</h3>
+                    <button class="modal-close" onclick="closeModal()">&times;</button>
+                </div>
+                <div class="modal-body" id="modalBody">
+                    <!-- Content will be inserted here -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Bottom Navigation -->
+        <div class="bottom-nav-wrapper">
+            <div class="bottom-nav">
+                <a href="#" class="nav-item active" onclick="showTab('profile'); return false;">
+                    <div class="nav-item-icon">Profile</div>
+                </a>
+                <a href="#" class="nav-item" onclick="showTab('meal'); return false;">
+                    <div class="nav-item-icon">Meals</div>
+                </a>
+                <a href="#" class="nav-item" onclick="showTab('workout'); return false;">
+                    <div class="nav-item-icon">Workouts</div>
+                </a>
+                <a href="#" class="nav-item" onclick="showTab('shopping'); return false;">
+                    <div class="nav-item-icon">Shopping</div>
+                </a>
+                <a href="#" class="nav-item" onclick="showTab('progress'); return false;">
+                    <div class="nav-item-icon">Progress</div>
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = '';
+
+        // Tab Navigation
+        function showTab(tabName) {
+            document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.nav-item').forEach(t => t.classList.remove('active'));
+            document.getElementById(tabName).classList.add('active');
+            event.target.closest('.nav-item').classList.add('active');
+
+            // Load data when switching tabs
+            if (tabName === 'meal') {
+                loadMealPlans();
+            } else if (tabName === 'workout') {
+                loadWorkoutPlans();
+            } else if (tabName === 'shopping') {
+                // Auto-generate shopping list when tab is shown
+                generateShoppingList();
+            }
+        }
+
+        // Helper Functions
+        function showLoading(elementId) {
+            document.getElementById(elementId).innerHTML = '<div class="loading">Loading...</div>';
+        }
+
+        function showError(elementId, message) {
+            document.getElementById(elementId).innerHTML = `<div class="error">${message}</div>`;
+        }
+
+        function safeToFixed(value, decimals = 1) {
+            if (value === null || value === undefined || isNaN(value)) {
+                return '0';
+            }
+            return Number(value).toFixed(decimals);
+        }
+
+        // Toast Notification
+        function showToast(message, type = 'info') {
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            toast.textContent = message;
+            document.body.appendChild(toast);
+
+            setTimeout(() => {
+                toast.style.animation = 'slideDown 0.3s ease-out reverse';
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+
+        // Load Plans for Selected Week
+        async function loadMealPlansForWeek() {
+            const weekStart = getWeekValue(currentMealWeek);
+            const weekStartDate = new Date(weekStart);
+            const weekEndDate = new Date(weekStartDate);
+            weekEndDate.setDate(weekStartDate.getDate() + 6);
+
+            try {
+                const res = await fetch(`${API_BASE}/api/meal-plans`);
+                const result = await res.json();
+                const resultContainer = document.getElementById('mealResult');
+
+                if (result.success && result.plans && result.plans.length > 0) {
+                    // Filter plans for the selected week
+                    const weekPlans = result.plans.filter(plan => {
+                        const planStart = new Date(plan.start_date);
+                        const planEnd = plan.end_date ? new Date(plan.end_date) : planStart;
+                        // Check if plan overlaps with selected week
+                        return (planStart <= weekEndDate && planEnd >= weekStartDate);
+                    });
+
+                    if (weekPlans.length > 0) {
+                        // Load the first matching plan
+                        await loadMealPlan(weekPlans[0].id);
+                    } else {
+                        resultContainer.innerHTML = `<div style="padding: var(--spacing-lg); text-align: center; color: var(--text-secondary);">
+                            <p>No meal plan found for this week.</p>
+                            <p style="font-size: 0.875rem; margin-top: var(--spacing-sm);">Generate a plan for this week to get started.</p>
+                        </div>`;
+                    }
+                } else {
+                    const resultContainer = document.getElementById('mealResult');
+                    resultContainer.innerHTML = `<div style="padding: var(--spacing-lg); text-align: center; color: var(--text-secondary);">
+                        <p>No meal plans found.</p>
+                        <p style="font-size: 0.875rem; margin-top: var(--spacing-sm);">Generate a plan to get started.</p>
+                    </div>`;
+                }
+            } catch (error) {
+                const resultContainer = document.getElementById('mealResult');
+                resultContainer.innerHTML = `<div class="error">Error loading plans: ${error.message}</div>`;
+            }
+        }
+
+        async function loadWorkoutPlansForWeek() {
+            const weekStart = getWeekValue(currentWorkoutWeek);
+            const weekStartDate = new Date(weekStart);
+            const weekEndDate = new Date(weekStartDate);
+            weekEndDate.setDate(weekStartDate.getDate() + 6);
+
+            try {
+                const res = await fetch(`${API_BASE}/api/workout-plans`);
+                const result = await res.json();
+                const resultContainer = document.getElementById('workoutResult');
+
+                if (result.success && result.plans && result.plans.length > 0) {
+                    // Filter plans for the selected week
+                    const weekPlans = result.plans.filter(plan => {
+                        const planStart = new Date(plan.start_date);
+                        const planEnd = plan.end_date ? new Date(plan.end_date) : planStart;
+                        // Check if plan overlaps with selected week
+                        return (planStart <= weekEndDate && planEnd >= weekStartDate);
+                    });
+
+                    if (weekPlans.length > 0) {
+                        // Load the first matching plan
+                        await loadWorkoutPlan(weekPlans[0].id);
+                    } else {
+                        resultContainer.innerHTML = `<div style="padding: var(--spacing-lg); text-align: center; color: var(--text-secondary);">
+                            <p>No workout plan found for this week.</p>
+                            <p style="font-size: 0.875rem; margin-top: var(--spacing-sm);">Generate a plan for this week to get started.</p>
+                        </div>`;
+                    }
+                } else {
+                    const resultContainer = document.getElementById('workoutResult');
+                    resultContainer.innerHTML = `<div style="padding: var(--spacing-lg); text-align: center; color: var(--text-secondary);">
+                        <p>No workout plans found.</p>
+                        <p style="font-size: 0.875rem; margin-top: var(--spacing-sm);">Generate a plan to get started.</p>
+                    </div>`;
+                }
+            } catch (error) {
+                const resultContainer = document.getElementById('workoutResult');
+                resultContainer.innerHTML = `<div class="error">Error loading plans: ${error.message}</div>`;
+            }
+        }
+
+        // Load Plans
+        async function loadMealPlans() {
+            try {
+                const res = await fetch(`${API_BASE}/api/meal-plans`);
+                const result = await res.json();
+                const listContainer = document.getElementById('mealPlanList');
+
+                if (result.success && result.plans && result.plans.length > 0) {
+                    listContainer.innerHTML = result.plans.map((plan, index) => {
+                        const startDate = new Date(plan.start_date);
+                        const endDate = plan.end_date ? new Date(plan.end_date) : startDate;
+                        const duration = Math.round((endDate - startDate) / (1000 * 60 * 60 * 24)) + 1;
+                        const isWeekly = duration > 1;
+
+                        let dateDisplay = startDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+                        if (isWeekly) {
+                            dateDisplay = `${startDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} - ${endDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}`;
+                        }
+
+                        const planType = 'Weekly Plan';
+
+                        let timeInfo = 'Last updated: ';
+                        if (plan.created_at) {
+                            const updatedDate = new Date(plan.created_at * 1000);
+                            const now = new Date();
+                            const diffMs = now - updatedDate;
+                            const diffMins = Math.floor(diffMs / 60000);
+                            const diffHours = Math.floor(diffMs / 3600000);
+                            const diffDays = Math.floor(diffMs / 86400000);
+
+                            if (diffMins < 1) timeInfo += 'Just now';
+                            else if (diffMins < 60) timeInfo += `${diffMins}m ago`;
+                            else if (diffHours < 24) timeInfo += `${diffHours}h ago`;
+                            else if (diffDays < 7) timeInfo += `${diffDays}d ago`;
+                            else timeInfo += updatedDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+                        } else {
+                            timeInfo += 'Unknown';
+                        }
+
+                        return `
+                            <div class="plan-item" onclick="loadMealPlan('${plan.id}')">
+                                <div class="plan-item-header">
+                                    <span class="plan-item-name">${planType}</span>
+                                    <span class="plan-item-date">${dateDisplay}</span>
+                                </div>
+                                <div class="plan-item-meta">${timeInfo}</div>
+                            </div>
+                        `;
+                    }).join('');
+                } else {
+                    listContainer.innerHTML = '<div class="loading">No saved plans yet. Generate one to get started!</div>';
+                }
+            } catch (error) {
+                document.getElementById('mealPlanList').innerHTML = '<div class="error">Error loading plans</div>';
+            }
+        }
+
+        async function loadWorkoutPlans() {
+            try {
+                const res = await fetch(`${API_BASE}/api/workout-plans`);
+                const result = await res.json();
+                const listContainer = document.getElementById('workoutPlanList');
+
+                if (result.success && result.plans && result.plans.length > 0) {
+                    listContainer.innerHTML = result.plans.map((plan, index) => {
+                        const startDate = new Date(plan.start_date);
+                        const endDate = plan.end_date ? new Date(plan.end_date) : startDate;
+                        const duration = Math.round((endDate - startDate) / (1000 * 60 * 60 * 24)) + 1;
+                        const isWeekly = duration > 1;
+
+                        let dateDisplay = startDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+                        if (isWeekly) {
+                            dateDisplay = `${startDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} - ${endDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}`;
+                        }
+
+                        const planType = isWeekly ? 'Weekly' : 'Daily';
+
+                        let timeInfo = '';
+                        if (plan.created_at) {
+                            const createdDate = new Date(plan.created_at * 1000);
+                            const now = new Date();
+                            const diffMs = now - createdDate;
+                            const diffMins = Math.floor(diffMs / 60000);
+                            const diffHours = Math.floor(diffMs / 3600000);
+                            const diffDays = Math.floor(diffMs / 86400000);
+
+                            if (diffMins < 1) timeInfo = ' • Just now';
+                            else if (diffMins < 60) timeInfo = ` • ${diffMins}m ago`;
+                            else if (diffHours < 24) timeInfo = ` • ${diffHours}h ago`;
+                            else if (diffDays < 7) timeInfo = ` • ${diffDays}d ago`;
+                            else timeInfo = ` • ${createdDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`;
+                        } else {
+                            timeInfo = ` • Plan #${index + 1}`;
+                        }
+
+                        return `
+                            <div class="plan-item" onclick="loadWorkoutPlan('${plan.id}')">
+                                <div class="plan-item-header">
+                                    <span class="plan-item-name">${planType}</span>
+                                    <span class="plan-item-date">${dateDisplay}</span>
+                                </div>
+                                <div class="plan-item-meta">${plan.workout_days_per_week || 0} workout days${timeInfo}</div>
+                            </div>
+                        `;
+                    }).join('');
+                } else {
+                    listContainer.innerHTML = '<div class="loading">No saved plans yet. Generate one to get started!</div>';
+                }
+            } catch (error) {
+                document.getElementById('workoutPlanList').innerHTML = '<div class="error">Error loading plans</div>';
+            }
+        }
+
+        // Display Functions
+        function displayMealPlan(plan, elementId) {
+            const container = document.getElementById(elementId);
+            const mealIcons = {
+                breakfast: 'Breakfast',
+                lunch: 'Lunch',
+                dinner: 'Dinner',
+                snack: 'Snack'
+            };
+
+            let html = '';
+
+            if (plan.meals && plan.meals.length > 0) {
+                plan.meals.forEach((meal, index) => {
+                    const mealId = `meal-${index}`;
+                    const icon = mealIcons[meal.type] || 'Meal';
+
+                    html += `
+                        <div class="meal-card" data-meal-id="${mealId}">
+                            <div class="meal-card-header" onclick="toggleMealCard('${mealId}')">
+                                <div class="meal-icon">${icon}</div>
+                                <div class="meal-info">
+                                    <div class="meal-name">${meal.name}</div>
+                                    <div class="meal-macros">
+                                        <span>P: ${safeToFixed(meal.protein)}g</span>
+                                        <span>C: ${safeToFixed(meal.carbs)}g</span>
+                                        <span>F: ${safeToFixed(meal.fat)}g</span>
+                                    </div>
+                                </div>
+                                <div class="meal-calories">${meal.calories} kcal</div>
+                            </div>
+                            <div class="meal-card-body" id="body-${mealId}">
+                                <div class="meal-description">${meal.description || ''}</div>
+                                <div class="macro-summary">
+                                    <div class="macro-item">
+                                        <div class="macro-value">${safeToFixed(meal.protein)}g</div>
+                                        <div class="macro-label">Protein</div>
+                                    </div>
+                                    <div class="macro-item">
+                                        <div class="macro-value">${safeToFixed(meal.carbs)}g</div>
+                                        <div class="macro-label">Carbs</div>
+                                    </div>
+                                    <div class="macro-item">
+                                        <div class="macro-value">${safeToFixed(meal.fat)}g</div>
+                                        <div class="macro-label">Fat</div>
+                                    </div>
+                                </div>
+                                ${meal.ingredients && meal.ingredients.length > 0 ? `
+                                    <div class="ingredients-list">
+                                        ${meal.ingredients.map(ing => `<span class="ingredient-tag">${ing}</span>`).join('')}
+                                    </div>
+                                ` : ''}
+                                <div class="meal-actions">
+                                    <button class="btn-accept" onclick="acceptMeal('${mealId}', '${meal.type}')">Accept</button>
+                                    <button class="btn-reject" onclick="rejectMeal('${mealId}', '${meal.type}')">Reject</button>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                });
+
+                // Calculate totals from meals
+                let totalCarbs = 0;
+                let totalFat = 0;
+                if (plan.meals && plan.meals.length > 0) {
+                    plan.meals.forEach(meal => {
+                        totalCarbs += meal.carbs || 0;
+                        totalFat += meal.fat || 0;
+                    });
+                }
+
+                // Daily Totals
+                if (plan.total_calories) {
+                    html += `
+                        <div class="daily-totals">
+                            <div class="daily-totals-title">Daily Totals</div>
+                            <div class="totals-grid">
+                                <div class="total-item">
+                                    <span class="total-value">${plan.total_calories}</span>
+                                    <span class="total-label">Calories</span>
+                                </div>
+                                <div class="total-item">
+                                    <span class="total-value">${safeToFixed(plan.total_protein || 0)}g</span>
+                                    <span class="total-label">Protein</span>
+                                </div>
+                                <div class="total-item">
+                                    <span class="total-value">${safeToFixed(totalCarbs)}g</span>
+                                    <span class="total-label">Carbs</span>
+                                </div>
+                                <div class="total-item">
+                                    <span class="total-value">${safeToFixed(totalFat)}g</span>
+                                    <span class="total-label">Fat</span>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                }
+            }
+
+            container.innerHTML = html;
+        }
+
+        function toggleMealCard(mealId) {
+            const card = document.querySelector(`[data-meal-id="${mealId}"]`);
+            card.classList.toggle('expanded');
+        }
+
+        function displayWeeklyMealPlan(plan, elementId) {
+            const container = document.getElementById(elementId);
+            const mealIcons = {
+                breakfast: 'Breakfast',
+                lunch: 'Lunch',
+                dinner: 'Dinner',
+                snack: 'Snack'
+            };
+            let html = '';
+
+            if (plan.days && plan.days.length > 0) {
+                plan.days.forEach((day, dayIndex) => {
+                    html += `
+                        <div class="day-card">
+                            <div class="day-header">${new Date(day.date).toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' })}</div>
+                            ${day.meals && day.meals.length > 0 ? day.meals.map((meal, mealIndex) => `
+                                <div class="meal-summary" id="meal-${plan.id}-${dayIndex}-${mealIndex}" style="padding: var(--spacing-sm); border-bottom: 1px solid var(--border); position: relative;">
+                                    <div id="meal-display-${plan.id}-${dayIndex}-${mealIndex}">
+                                        <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                                            <div style="flex: 1; padding-right: var(--spacing-sm);">
+                                                <div class="meal-summary-name" style="font-weight: 500; margin-bottom: var(--spacing-xs);">${mealIcons[meal.type] || 'Meal'}: ${meal.name || 'No meal'}</div>
+                                                <div style="font-size: 0.75rem; color: var(--text-secondary);">
+                                                    ${meal.calories || 0} kcal ${meal.protein ? `• ${meal.protein}g protein` : ''}
+                                                </div>
+                                            </div>
+                                            <div style="display: flex; gap: var(--spacing-xs);">
+                                                <button class="btn" style="padding: var(--spacing-xs) var(--spacing-sm); font-size: 0.75rem;" onclick="showMealInstructions('${plan.id}', '${day.date}', '${meal.type}', ${dayIndex}, ${mealIndex})" title="View Instructions">View</button>
+                                                <button class="btn" style="padding: var(--spacing-xs) var(--spacing-sm); font-size: 0.75rem;" onclick="showMealEditForm('${plan.id}', '${day.date}', '${meal.type}', ${dayIndex}, ${mealIndex})" title="Edit">Edit</button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div id="meal-edit-${plan.id}-${dayIndex}-${mealIndex}" style="display: none;">
+                                        <form onsubmit="saveMealEdit(event, '${plan.id}', '${day.date}', '${meal.type}', ${dayIndex}, ${mealIndex}); return false;">
+                                            <div class="form-group">
+                                                <label class="form-label">Meal Name *</label>
+                                                <input type="text" id="edit-meal-name-${plan.id}-${dayIndex}-${mealIndex}" class="form-input" value="${meal.name || ''}" required>
+                                            </div>
+                                            <div class="form-group">
+                                                <label class="form-label">Calories *</label>
+                                                <input type="number" id="edit-meal-calories-${plan.id}-${dayIndex}-${mealIndex}" class="form-input" value="${meal.calories || 0}" required min="0">
+                                            </div>
+                                            <div class="form-group">
+                                                <label class="form-label">Protein (g) *</label>
+                                                <input type="number" id="edit-meal-protein-${plan.id}-${dayIndex}-${mealIndex}" class="form-input" value="${meal.protein || 0}" required min="0" step="0.1">
+                                            </div>
+                                            <div class="form-group">
+                                                <label class="form-label">Carbs (g) *</label>
+                                                <input type="number" id="edit-meal-carbs-${plan.id}-${dayIndex}-${mealIndex}" class="form-input" value="${meal.carbs || 0}" required min="0" step="0.1">
+                                            </div>
+                                            <div class="form-group">
+                                                <label class="form-label">Fat (g) *</label>
+                                                <input type="number" id="edit-meal-fat-${plan.id}-${dayIndex}-${mealIndex}" class="form-input" value="${meal.fat || 0}" required min="0" step="0.1">
+                                            </div>
+                                            <div style="display: flex; gap: var(--spacing-sm);">
+                                                <button type="submit" class="btn" style="flex: 1;">Save</button>
+                                                <button type="button" class="btn btn-secondary" style="flex: 1;" onclick="cancelMealEdit('${plan.id}', ${dayIndex}, ${mealIndex})">Cancel</button>
+                                            </div>
+                                        </form>
+                                    </div>
+                                </div>
+                            `).join('') : '<div style="padding: var(--spacing-md); text-align: center; color: var(--text-secondary);">No meals planned</div>'}
+                        </div>
+                    `;
+                });
+            }
+
+            container.innerHTML = html;
+        }
+
+        // Screen Navigation
+        function showScreen(screenId) {
+            // Hide all screens in current tab
+            const currentTab = document.querySelector('.tab-content.active');
+            if (currentTab) {
+                currentTab.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+                const screen = currentTab.querySelector(`#${screenId}`);
+                if (screen) {
+                    screen.classList.add('active');
+                }
+            }
+        }
+
+        // Week management
+        let currentMealWeek = 0; // 0 = current week, -1 = previous week, 1 = next week, etc.
+        let currentWorkoutWeek = 0;
+
+        // Helper function to get Monday of a week offset
+        function getWeekStartDate(weekOffset = 0) {
+            const now = new Date();
+            const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+            const dayOfWeek = today.getDay();
+            const daysToMonday = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
+            const monday = new Date(today);
+            monday.setDate(today.getDate() + daysToMonday + (weekOffset * 7));
+            return monday;
+        }
+
+        // Helper function to format week display
+        function formatWeekDisplay(weekOffset) {
+            const monday = getWeekStartDate(weekOffset);
+            const sunday = new Date(monday);
+            sunday.setDate(monday.getDate() + 6);
+
+            const mondayStr = monday.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+            const sundayStr = sunday.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+
+            if (weekOffset === 0) {
+                return `This Week (${mondayStr} - ${sundayStr})`;
+            } else if (weekOffset === -1) {
+                return `Last Week (${mondayStr} - ${sundayStr})`;
+            } else if (weekOffset === 1) {
+                return `Next Week (${mondayStr} - ${sundayStr})`;
+            } else {
+                return `${mondayStr} - ${sundayStr}`;
+            }
+        }
+
+        // Helper function to get week value for API
+        function getWeekValue(weekOffset) {
+            const monday = getWeekStartDate(weekOffset);
+            return monday.toISOString().split('T')[0];
+        }
+
+        // Change meal week
+        function changeMealWeek(delta) {
+            currentMealWeek += delta;
+            updateMealWeekDisplay();
+            // Reload and filter plans for the selected week
+            loadMealPlansForWeek();
+        }
+
+        // Change workout week
+        function changeWorkoutWeek(delta) {
+            currentWorkoutWeek += delta;
+            updateWorkoutWeekDisplay();
+            // Reload and filter plans for the selected week
+            loadWorkoutPlansForWeek();
+        }
+
+        // Update meal week display
+        function updateMealWeekDisplay() {
+            const display = document.getElementById('mealWeekDisplay');
+            const selector = document.getElementById('mealWeekSelector');
+            if (display) {
+                display.textContent = formatWeekDisplay(currentMealWeek);
+            }
+            if (selector) {
+                selector.value = getWeekValue(currentMealWeek);
+            }
+        }
+
+        // Update workout week display
+        function updateWorkoutWeekDisplay() {
+            const display = document.getElementById('workoutWeekDisplay');
+            const selector = document.getElementById('workoutWeekSelector');
+            if (display) {
+                display.textContent = formatWeekDisplay(currentWorkoutWeek);
+            }
+            if (selector) {
+                selector.value = getWeekValue(currentWorkoutWeek);
+            }
+        }
+
+        // API Calls
+        async function generateWeeklyMeal() {
+            const generateBtn = event?.target;
+            const originalText = generateBtn?.textContent;
+
+            // Get selected week
+            const startDate = getWeekValue(currentMealWeek);
+
+            // Disable button and show loading
+            if (generateBtn) {
+                generateBtn.disabled = true;
+                generateBtn.textContent = 'Generating...';
+            }
+
+            try {
+                const res = await fetch(`${API_BASE}/api/meal-plan/weekly`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ start_date: startDate })
+                });
+                const result = await res.json();
+
+                if (result.success && result.plan) {
+                    // Show toast notification
+                    if (result.replaced) {
+                        const planStartDate = new Date(result.plan.start_date);
+                        const planEndDate = new Date(result.plan.end_date);
+                        const dateRange = `${planStartDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} - ${planEndDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}`;
+                        showToast(`Existing plan for ${dateRange} replaced.`, 'success');
+                    } else {
+                        showToast('New weekly plan created!', 'success');
+                    }
+
+                    // Reload plans list to show updated single plan
+                    await loadMealPlans();
+
+                    // Show the plan on same page
+                    if (result.plan.days) {
+                        displayWeeklyMealPlan(result.plan, 'mealResult');
+                    } else {
+                        displayMealPlan(result.plan, 'mealResult');
+                    }
+
+                    // Update week display to match the generated plan
+                    const planStartDate = new Date(result.plan.start_date);
+                    const today = new Date();
+                    const daysDiff = Math.floor((planStartDate - today) / (1000 * 60 * 60 * 24));
+                    const weekDiff = Math.floor(daysDiff / 7);
+                    currentMealWeek = weekDiff;
+                    updateMealWeekDisplay();
+
+                    // Auto-update shopping list
+                    generateShoppingList();
+                } else {
+                    showError('mealResult', result.error || 'Failed to generate plan');
+                    showToast('Failed to generate plan', 'error');
+                }
+            } catch (error) {
+                showError('mealResult', error.message);
+                showToast('Error: ' + error.message, 'error');
+            } finally {
+                // Re-enable button
+                if (generateBtn) {
+                    generateBtn.disabled = false;
+                    generateBtn.textContent = originalText || 'Generate Weekly Plan';
+                }
+            }
+        }
+
+        async function loadMealPlan(planId) {
+            showLoading('mealResult');
+            try {
+                const res = await fetch(`${API_BASE}/api/meal-plan/${planId}`);
+                const result = await res.json();
+                if (result.success && result.plan) {
+                    if (result.plan.days) {
+                        displayWeeklyMealPlan(result.plan, 'mealResult');
+                    } else {
+                        displayMealPlan(result.plan, 'mealResult');
+                    }
+                } else {
+                    showError('mealResult', result.error || 'Plan not found');
+                }
+            } catch (error) {
+                showError('mealResult', error.message);
+            }
+        }
+
+        // Workout Display Functions
+        function displayWorkoutPlan(plan, elementId) {
+            const container = document.getElementById(elementId);
+            let html = '';
+
+            if (plan.workouts && plan.workouts.length > 0) {
+                plan.workouts.forEach((workout, index) => {
+                    const workoutId = `workout-${index}`;
+                    html += `
+                        <div class="workout-card" data-workout-id="${workoutId}">
+                            <div class="workout-header">
+                                <div class="workout-name">${workout.name}</div>
+                                <div class="workout-badge">${workout.type || 'Workout'}</div>
+                            </div>
+                            <div style="font-size: 0.875rem; color: var(--text-secondary); margin-bottom: var(--spacing-md);">
+                                ${workout.description || ''}
+                            </div>
+                            ${workout.exercises && workout.exercises.length > 0 ? workout.exercises.map(ex => `
+                                <div class="exercise-item">
+                                    <div class="exercise-name">${ex.name}</div>
+                                    <div class="exercise-details">
+                                        ${ex.sets ? `${ex.sets} sets × ${ex.reps || ''} reps` : ''}
+                                        ${ex.duration_seconds ? ` • ${Math.floor(ex.duration_seconds / 60)} min` : ''}
+                                        ${ex.rest_seconds ? ` • Rest: ${ex.rest_seconds}s` : ''}
+                                    </div>
+                                </div>
+                            `).join('') : ''}
+                            <div class="meal-actions">
+                                <button class="btn-accept" onclick="acceptWorkout('${workoutId}')">Completed</button>
+                                <button class="btn-reject" onclick="rejectWorkout('${workoutId}')">Skipped</button>
+                            </div>
+                        </div>
+                    `;
+                });
+            } else if (plan.is_rest_day) {
+                html += '<div class="rest-day">Rest Day - No workouts scheduled</div>';
+            }
+
+            container.innerHTML = html;
+        }
+
+        function displayWeeklyWorkoutPlan(plan, elementId) {
+            const container = document.getElementById(elementId);
+            let html = '';
+
+            if (plan.days && plan.days.length > 0) {
+                plan.days.forEach((day, dayIndex) => {
+                    html += `
+                        <div class="day-card">
+                            <div class="day-header">${new Date(day.date).toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' })}</div>
+                            <div id="workout-display-${plan.id}-${dayIndex}">
+                                ${day.is_rest_day ? '<div style="text-align: center; color: var(--text-secondary); padding: var(--spacing-md);">Rest Day</div>' : ''}
+                                ${day.workouts && day.workouts.length > 0 ? day.workouts.map((workout, workoutIndex) => `
+                                    <div class="meal-summary" style="position: relative;">
+                                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                                            <div style="flex: 1;">
+                                                <span class="meal-summary-name">${workout.name}</span>
+                                                <span class="meal-summary-calories">${workout.duration_minutes || 0} min</span>
+                                            </div>
+                                            <div style="display: flex; gap: var(--spacing-xs);">
+                                                <button class="btn" style="padding: var(--spacing-xs) var(--spacing-sm); font-size: 0.75rem;" onclick="showWorkoutDetails('${plan.id}', ${dayIndex}, ${workoutIndex})" title="View Details">View</button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                `).join('') : ''}
+                                <div style="padding: var(--spacing-sm); display: flex; gap: var(--spacing-sm);">
+                                    <button class="btn" style="flex: 1; font-size: 0.875rem;" onclick="showWorkoutEditForm('${plan.id}', '${day.date}', ${dayIndex}, ${day.is_rest_day})">Edit</button>
+                                </div>
+                            </div>
+                            <div id="workout-edit-${plan.id}-${dayIndex}" style="display: none;">
+                                <form onsubmit="saveWorkoutEdit(event, '${plan.id}', '${day.date}', ${dayIndex}); return false;">
+                                    <div class="form-group">
+                                        <label class="form-label">
+                                            <input type="checkbox" id="edit-workout-rest-${plan.id}-${dayIndex}" ${day.is_rest_day ? 'checked' : ''} onchange="toggleWorkoutRestDay('${plan.id}', ${dayIndex})">
+                                            Rest Day
+                                        </label>
+                                    </div>
+                                    <div id="workout-fields-${plan.id}-${dayIndex}" style="${day.is_rest_day ? 'display: none;' : ''}">
+                                        <div class="form-group">
+                                            <label class="form-label">Workout Name *</label>
+                                            <input type="text" id="edit-workout-name-${plan.id}-${dayIndex}" class="form-input" value="${day.workouts && day.workouts[0] ? day.workouts[0].name : ''}" required>
+                                        </div>
+                                        <div class="form-group">
+                                            <label class="form-label">Duration (minutes) *</label>
+                                            <input type="number" id="edit-workout-duration-${plan.id}-${dayIndex}" class="form-input" value="${day.workouts && day.workouts[0] ? day.workouts[0].duration_minutes : 30}" required min="1">
+                                        </div>
+                                        <div class="form-group">
+                                            <label class="form-label">Workout Type *</label>
+                                            <input type="text" id="edit-workout-type-${plan.id}-${dayIndex}" class="form-input" value="${day.workouts && day.workouts[0] ? day.workouts[0].type : 'general'}" required>
+                                        </div>
+                                    </div>
+                                    <div style="display: flex; gap: var(--spacing-sm);">
+                                        <button type="submit" class="btn" style="flex: 1;">Save</button>
+                                        <button type="button" class="btn btn-secondary" style="flex: 1;" onclick="cancelWorkoutEdit('${plan.id}', ${dayIndex})">Cancel</button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    `;
+                });
+            }
+
+            container.innerHTML = html;
+        }
+
+        // Shopping List Display
+        function displayShoppingList(shoppingList, elementId) {
+            displayShoppingListWithManual(shoppingList, elementId);
+        }
+
+        function displayShoppingListByWeek(shoppingListsByWeek, elementId) {
+            const container = document.getElementById(elementId);
+            let html = '';
+
+            // Sort weeks by start date
+            const sortedWeeks = Object.entries(shoppingListsByWeek).sort((a, b) =>
+                a[0].localeCompare(b[0])
+            );
+
+            sortedWeeks.forEach(([weekStart, weekData]) => {
+                const startDate = new Date(weekData.week_start);
+                const endDate = new Date(weekData.week_end);
+                const weekLabel = `${startDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} - ${endDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}`;
+
+                html += `
+                    <div class="card" style="margin-bottom: var(--spacing-lg);">
+                        <div class="card-header" style="margin-bottom: var(--spacing-md);">
+                            <h3 style="font-size: 1.125rem; font-weight: 600;">Week: ${weekLabel}</h3>
+                            <small style="color: var(--text-secondary);">${weekData.total_items} items</small>
+                        </div>
+                `;
+
+                // Merge with manual items
+                const allByCategory = {};
+                if (weekData.by_category) {
+                    Object.entries(weekData.by_category).forEach(([category, items]) => {
+                        if (!allByCategory[category]) {
+                            allByCategory[category] = [];
+                        }
+                        allByCategory[category].push(...items);
+                    });
+                }
+
+                // Add manual items
+                manualShoppingItems.forEach(item => {
+                    const cat = item.category || 'other';
+                    if (!allByCategory[cat]) {
+                        allByCategory[cat] = [];
+                    }
+                    allByCategory[cat].push(item);
+                });
+
+                if (Object.keys(allByCategory).length > 0) {
+                    Object.entries(allByCategory).forEach(([category, items]) => {
+                        html += `
+                            <div class="shopping-category" style="margin-bottom: var(--spacing-md);">
+                                <div class="category-header">${category}</div>
+                                ${items.map((item, index) => {
+                            const itemId = `item-${weekStart}-${category}-${index}-${item.id || index}`;
+                            return `
+                                        <div class="shopping-item" data-item-id="${itemId}" data-state="none">
+                                            <div class="shopping-item-name">${item.name}</div>
+                                            <div class="shopping-item-quantity">${item.quantity} ${item.unit || ''}</div>
+                                            <div class="shopping-actions">
+                                                <button class="btn-accept" style="padding: var(--spacing-xs) var(--spacing-md); font-size: 0.75rem;" onclick="acceptItem('${itemId}')">Accept</button>
+                                                <button class="btn-reject" style="padding: var(--spacing-xs) var(--spacing-md); font-size: 0.75rem;" onclick="rejectItem('${itemId}')">Reject</button>
+                                            </div>
+                                        </div>
+                                    `;
+                        }).join('')}
+                            </div>
+                        `;
+                    });
+                } else {
+                    html += '<div class="loading">No items for this week</div>';
+                }
+
+                html += '</div>';
+            });
+
+            if (sortedWeeks.length === 0) {
+                html = '<div class="loading">No meal plans found. Generate meal plans first.</div>';
+            }
+
+            container.innerHTML = html;
+        }
+
+        // Workout API Calls
+        async function generateWeeklyWorkout() {
+            const generateBtn = event?.target;
+            const originalText = generateBtn?.textContent;
+
+            // Get selected week
+            const startDate = getWeekValue(currentWorkoutWeek);
+
+            // Disable button and show loading
+            if (generateBtn) {
+                generateBtn.disabled = true;
+                generateBtn.textContent = 'Generating...';
+            }
+
+            showLoading('workoutResult');
+            try {
+                const res = await fetch(`${API_BASE}/api/workout-plan/weekly`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ start_date: startDate })
+                });
+                const result = await res.json();
+                if (result.success && result.plan) {
+                    // Show toast notification
+                    if (result.replaced) {
+                        const planStartDate = new Date(result.plan.start_date);
+                        const planEndDate = new Date(result.plan.end_date);
+                        const dateRange = `${planStartDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} - ${planEndDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}`;
+                        showToast(`Existing workout plan for ${dateRange} replaced.`, 'success');
+                    } else {
+                        showToast('New weekly workout plan created!', 'success');
+                    }
+
+                    if (result.plan.days) {
+                        displayWeeklyWorkoutPlan(result.plan, 'workoutResult');
+                    } else {
+                        displayWorkoutPlan(result.plan, 'workoutResult');
+                    }
+                    loadWorkoutPlans();
+
+                    // Update week display to match the generated plan
+                    const planStartDate = new Date(result.plan.start_date);
+                    const today = new Date();
+                    const daysDiff = Math.floor((planStartDate - today) / (1000 * 60 * 60 * 24));
+                    const weekDiff = Math.floor(daysDiff / 7);
+                    currentWorkoutWeek = weekDiff;
+                    updateWorkoutWeekDisplay();
+
+                    // Auto-update shopping list (in case meal plans changed)
+                    generateShoppingList();
+                } else {
+                    showError('workoutResult', result.error || 'Failed to generate plan');
+                    showToast('Failed to generate plan', 'error');
+                }
+            } catch (error) {
+                showError('workoutResult', error.message);
+                showToast('Error: ' + error.message, 'error');
+            } finally {
+                // Re-enable button
+                if (generateBtn) {
+                    generateBtn.disabled = false;
+                    generateBtn.textContent = originalText || 'Generate Weekly Plan';
+                }
+            }
+        }
+
+        async function loadWorkoutPlan(planId) {
+            showLoading('workoutResult');
+            try {
+                const res = await fetch(`${API_BASE}/api/workout-plan/${planId}`);
+                const result = await res.json();
+                if (result.success && result.plan) {
+                    if (result.plan.days) {
+                        displayWeeklyWorkoutPlan(result.plan, 'workoutResult');
+                    } else {
+                        displayWorkoutPlan(result.plan, 'workoutResult');
+                    }
+                } else {
+                    showError('workoutResult', result.error || 'Plan not found');
+                }
+            } catch (error) {
+                showError('workoutResult', error.message);
+            }
+        }
+
+        // Shopping List API Call
+        async function generateShoppingList() {
+            showLoading('shoppingResult');
+            try {
+                const res = await fetch(`${API_BASE}/api/shopping-list`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({})
+                });
+                const result = await res.json();
+                if (result.success) {
+                    if (result.shopping_lists_by_week) {
+                        // Multiple weeks - show weekly cards
+                        displayShoppingListByWeek(result.shopping_lists_by_week, 'shoppingResult');
+                    } else if (result.shopping_list) {
+                        // Single plan - show regular list
+                        displayShoppingList(result.shopping_list, 'shoppingResult');
+                    } else {
+                        showError('shoppingResult', 'No shopping list data received');
+                    }
+                } else {
+                    // Show manual items even if generation fails
+                    if (manualShoppingItems.length > 0) {
+                        displayShoppingListWithManual({ items: [], by_category: groupItemsByCategory(manualShoppingItems) }, 'shoppingResult');
+                    } else {
+                        showError('shoppingResult', result.error || 'Failed to generate shopping list');
+                    }
+                }
+            } catch (error) {
+                // Show manual items even if API fails
+                if (manualShoppingItems.length > 0) {
+                    displayShoppingListWithManual({ items: [], by_category: groupItemsByCategory(manualShoppingItems) }, 'shoppingResult');
+                } else {
+                    showError('shoppingResult', error.message);
+                }
+            }
+        }
+
+        // Initialize on page load
+        function initializeApp() {
+            // Initialize week displays
+            updateMealWeekDisplay();
+            updateWorkoutWeekDisplay();
+
+            // Initialize category list
+            updateCategoryList();
+
+            // Load plans for current week
+            loadMealPlansForWeek();
+            loadWorkoutPlansForWeek();
+
+            // Auto-generate shopping list on load
+            generateShoppingList();
+        }
+
+        // Initialize when DOM is ready
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', initializeApp);
+        } else {
+            initializeApp();
+        }
+
+        // Accept/Reject for Workouts and Shopping
+        function acceptWorkout(workoutId) {
+            const card = document.querySelector(`[data-workout-id="${workoutId}"]`);
+            const actions = card.querySelector('.meal-actions');
+            actions.innerHTML = '<span class="status-badge status-accepted">Completed</span>';
+            card.style.borderLeft = '4px solid var(--success)';
+        }
+
+        function rejectWorkout(workoutId) {
+            const card = document.querySelector(`[data-workout-id="${workoutId}"]`);
+            const actions = card.querySelector('.meal-actions');
+            actions.innerHTML = '<span class="status-badge status-rejected">Skipped</span>';
+            card.style.borderLeft = '4px solid var(--error)';
+        }
+
+        function acceptItem(itemId) {
+            const item = document.querySelector(`[data-item-id="${itemId}"]`);
+            if (item) {
+                const actions = item.querySelector('.shopping-actions');
+                if (actions) {
+                    const currentState = item.dataset.state || 'none';
+                    if (currentState === 'accepted') {
+                        // Toggle off - undo
+                        item.style.opacity = '1';
+                        item.style.textDecoration = 'none';
+                        item.dataset.state = 'none';
+                        actions.innerHTML = `
+                            <button class="btn-accept" style="padding: var(--spacing-xs) var(--spacing-md); font-size: 0.75rem;" onclick="acceptItem('${itemId}')">Accept</button>
+                            <button class="btn-reject" style="padding: var(--spacing-xs) var(--spacing-md); font-size: 0.75rem;" onclick="rejectItem('${itemId}')">Reject</button>
+                        `;
+                    } else {
+                        // Toggle on
+                        item.style.opacity = '0.6';
+                        item.style.textDecoration = 'line-through';
+                        item.dataset.state = 'accepted';
+                        actions.innerHTML = `
+                            <button class="btn-accept" style="padding: var(--spacing-xs) var(--spacing-md); font-size: 0.75rem; background: var(--success);" onclick="acceptItem('${itemId}')">Accept</button>
+                            <button class="btn-reject" style="padding: var(--spacing-xs) var(--spacing-md); font-size: 0.75rem;" onclick="rejectItem('${itemId}')">Reject</button>
+                        `;
+                    }
+                }
+            }
+        }
+
+        function rejectItem(itemId) {
+            const item = document.querySelector(`[data-item-id="${itemId}"]`);
+            if (item) {
+                const actions = item.querySelector('.shopping-actions');
+                if (actions) {
+                    const currentState = item.dataset.state || 'none';
+                    if (currentState === 'rejected') {
+                        // Toggle off - undo
+                        item.style.opacity = '1';
+                        item.style.textDecoration = 'none';
+                        item.dataset.state = 'none';
+                        actions.innerHTML = `
+                            <button class="btn-accept" style="padding: var(--spacing-xs) var(--spacing-md); font-size: 0.75rem;" onclick="acceptItem('${itemId}')">Accept</button>
+                            <button class="btn-reject" style="padding: var(--spacing-xs) var(--spacing-md); font-size: 0.75rem;" onclick="rejectItem('${itemId}')">Reject</button>
+                        `;
+                    } else {
+                        // Toggle on
+                        item.style.opacity = '0.5';
+                        item.dataset.state = 'rejected';
+                        actions.innerHTML = `
+                            <button class="btn-accept" style="padding: var(--spacing-xs) var(--spacing-md); font-size: 0.75rem;" onclick="acceptItem('${itemId}')">Accept</button>
+                            <button class="btn-reject" style="padding: var(--spacing-xs) var(--spacing-md); font-size: 0.75rem; background: var(--error);" onclick="rejectItem('${itemId}')">Reject</button>
+                        `;
+                    }
+                }
+            }
+        }
+
+        // Modal Functions
+        function closeModal(event) {
+            if (event && event.target !== event.currentTarget) return;
+            document.getElementById('modalOverlay').classList.remove('active');
+        }
+
+        function showModal(title, content) {
+            document.getElementById('modalTitle').textContent = title;
+            document.getElementById('modalBody').innerHTML = content;
+            document.getElementById('modalOverlay').classList.add('active');
+        }
+
+        async function showMealInstructions(planId, date, mealType, dayIndex, mealIndex) {
+            try {
+                const res = await fetch(`${API_BASE}/api/meal-plan/${planId}`);
+                const result = await res.json();
+                if (!result.success || !result.plan) {
+                    showToast('Error loading plan', 'error');
+                    return;
+                }
+
+                const day = result.plan.days[dayIndex];
+                const meal = day.meals.find(m => m.type === mealType);
+
+                if (!meal) {
+                    showToast('Meal not found', 'error');
+                    return;
+                }
+
+                const mealIcons = {
+                    breakfast: 'Breakfast',
+                    lunch: 'Lunch',
+                    dinner: 'Dinner',
+                    snack: 'Snack'
+                };
+                const icon = mealIcons[mealType] || 'Meal';
+
+                let content = `
+                    <div style="margin-bottom: var(--spacing-lg);">
+                        <h4 style="font-size: 1.125rem; font-weight: 600; margin-bottom: var(--spacing-sm);">${meal.name || 'Meal'}</h4>
+                        ${meal.description ? `<p style="color: var(--text-secondary); margin-bottom: var(--spacing-md);">${meal.description}</p>` : ''}
+                    </div>
+                `;
+
+                if (meal.ingredients && meal.ingredients.length > 0) {
+                    content += `
+                        <div style="margin-bottom: var(--spacing-lg);">
+                            <h5 style="font-weight: 600; margin-bottom: var(--spacing-sm);">Ingredients:</h5>
+                            <div style="display: flex; flex-wrap: wrap; gap: var(--spacing-xs);">
+                                ${meal.ingredients.map(ing => `<span class="ingredient-tag">${ing}</span>`).join('')}
+                            </div>
+                        </div>
+                    `;
+                }
+
+                if (meal.instructions && meal.instructions.length > 0) {
+                    content += `
+                        <div>
+                            <h5 style="font-weight: 600; margin-bottom: var(--spacing-sm);">Instructions:</h5>
+                            <ol class="instructions-list">
+                                ${meal.instructions.map(inst => `<li>${inst}</li>`).join('')}
+                            </ol>
+                        </div>
+                    `;
+                } else {
+                    content += `
+                        <div style="color: var(--text-secondary); font-style: italic;">
+                            No instructions available for this meal.
+                        </div>
+                    `;
+                }
+
+                showModal(`${meal.name || 'Meal'} Instructions`, content);
+            } catch (error) {
+                showToast('Error: ' + error.message, 'error');
+            }
+        }
+
+        async function showWorkoutDetails(planId, dayIndex, workoutIndex) {
+            try {
+                const res = await fetch(`${API_BASE}/api/workout-plan/${planId}`);
+                const result = await res.json();
+                if (!result.success || !result.plan) {
+                    showToast('Error loading plan', 'error');
+                    return;
+                }
+
+                const day = result.plan.days[dayIndex];
+                const workout = day.workouts[workoutIndex];
+
+                if (!workout) {
+                    showToast('Workout not found', 'error');
+                    return;
+                }
+
+                let content = `
+                    <div style="margin-bottom: var(--spacing-lg);">
+                        <h4 style="font-size: 1.125rem; font-weight: 600; margin-bottom: var(--spacing-sm);">${workout.name}</h4>
+                        <div style="display: flex; gap: var(--spacing-md); color: var(--text-secondary); font-size: 0.875rem; margin-bottom: var(--spacing-sm);">
+                            <span>Type: ${workout.type || 'General'}</span>
+                            <span>Duration: ${workout.duration_minutes || 0} min</span>
+                            ${workout.difficulty ? `<span>Difficulty: ${workout.difficulty}</span>` : ''}
+                        </div>
+                        ${workout.description ? `<p style="color: var(--text-secondary); margin-bottom: var(--spacing-md);">${workout.description}</p>` : ''}
+                    </div>
+                `;
+
+                if (workout.exercises && workout.exercises.length > 0) {
+                    content += `
+                        <div>
+                            <h5 style="font-weight: 600; margin-bottom: var(--spacing-md);">Exercises:</h5>
+                            ${workout.exercises.map((ex, idx) => `
+                                <div class="exercise-item" style="margin-bottom: var(--spacing-md);">
+                                    <div class="exercise-name" style="font-weight: 600; margin-bottom: var(--spacing-xs);">${idx + 1}. ${ex.name}</div>
+                                    <div class="exercise-details" style="font-size: 0.875rem; color: var(--text-secondary);">
+                                        ${ex.sets ? `${ex.sets} sets` : ''}
+                                        ${ex.reps ? ` × ${ex.reps} reps` : ''}
+                                        ${ex.duration_seconds ? ` • ${Math.floor(ex.duration_seconds / 60)} min` : ''}
+                                        ${ex.rest_seconds ? ` • Rest: ${ex.rest_seconds}s` : ''}
+                                    </div>
+                                    ${ex.description ? `<div style="margin-top: var(--spacing-xs); font-size: 0.875rem; color: var(--text-secondary);">${ex.description}</div>` : ''}
+                                </div>
+                            `).join('')}
+                        </div>
+                    `;
+                } else {
+                    content += `
+                        <div style="color: var(--text-secondary); font-style: italic;">
+                            No exercise details available for this workout.
+                        </div>
+                    `;
+                }
+
+                showModal('Workout Details', content);
+            } catch (error) {
+                showToast('Error: ' + error.message, 'error');
+            }
+        }
+
+        // Edit Functions
+        function showMealEditForm(planId, date, mealType, dayIndex, mealIndex) {
+            document.getElementById(`meal-display-${planId}-${dayIndex}-${mealIndex}`).style.display = 'none';
+            document.getElementById(`meal-edit-${planId}-${dayIndex}-${mealIndex}`).style.display = 'block';
+        }
+
+        function cancelMealEdit(planId, dayIndex, mealIndex) {
+            document.getElementById(`meal-display-${planId}-${dayIndex}-${mealIndex}`).style.display = 'block';
+            document.getElementById(`meal-edit-${planId}-${dayIndex}-${mealIndex}`).style.display = 'none';
+        }
+
+        async function saveMealEdit(event, planId, date, mealType, dayIndex, mealIndex) {
+            event.preventDefault();
+
+            const name = document.getElementById(`edit-meal-name-${planId}-${dayIndex}-${mealIndex}`).value.trim();
+            const calories = parseInt(document.getElementById(`edit-meal-calories-${planId}-${dayIndex}-${mealIndex}`).value) || 0;
+            const protein = parseFloat(document.getElementById(`edit-meal-protein-${planId}-${dayIndex}-${mealIndex}`).value) || 0;
+            const carbs = parseFloat(document.getElementById(`edit-meal-carbs-${planId}-${dayIndex}-${mealIndex}`).value) || 0;
+            const fat = parseFloat(document.getElementById(`edit-meal-fat-${planId}-${dayIndex}-${mealIndex}`).value) || 0;
+
+            if (!name) {
+                showToast('Meal name is required', 'error');
+                return;
+            }
+
+            const mealData = {
+                id: `meal_${date}_${mealType}`,
+                name: name,
+                description: '',
+                calories: calories,
+                protein: protein,
+                carbs: carbs,
+                fat: fat,
+                ingredients: [],
+                instructions: [],
+                prep_time: 0,
+                cook_time: 0
+            };
+
+            try {
+                const res = await fetch(`${API_BASE}/api/meal-plan/${planId}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        date: date,
+                        meal_type: mealType,
+                        meal: mealData
+                    })
+                });
+                const result = await res.json();
+                if (result.success) {
+                    showToast('Meal updated!', 'success');
+                    loadMealPlan(planId);
+                    // Auto-update shopping list
+                    generateShoppingList();
+                } else {
+                    showToast('Error: ' + (result.error || 'Failed to update'), 'error');
+                }
+            } catch (error) {
+                showToast('Error: ' + error.message, 'error');
+            }
+        }
+
+        function showWorkoutEditForm(planId, date, dayIndex, isRestDay) {
+            document.getElementById(`workout-display-${planId}-${dayIndex}`).style.display = 'none';
+            document.getElementById(`workout-edit-${planId}-${dayIndex}`).style.display = 'block';
+        }
+
+        function cancelWorkoutEdit(planId, dayIndex) {
+            document.getElementById(`workout-display-${planId}-${dayIndex}`).style.display = 'block';
+            document.getElementById(`workout-edit-${planId}-${dayIndex}`).style.display = 'none';
+        }
+
+        function toggleWorkoutRestDay(planId, dayIndex) {
+            const isRestDay = document.getElementById(`edit-workout-rest-${planId}-${dayIndex}`).checked;
+            const fields = document.getElementById(`workout-fields-${planId}-${dayIndex}`);
+            fields.style.display = isRestDay ? 'none' : 'block';
+
+            if (!isRestDay) {
+                document.getElementById(`edit-workout-name-${planId}-${dayIndex}`).required = true;
+                document.getElementById(`edit-workout-duration-${planId}-${dayIndex}`).required = true;
+                document.getElementById(`edit-workout-type-${planId}-${dayIndex}`).required = true;
+            } else {
+                document.getElementById(`edit-workout-name-${planId}-${dayIndex}`).required = false;
+                document.getElementById(`edit-workout-duration-${planId}-${dayIndex}`).required = false;
+                document.getElementById(`edit-workout-type-${planId}-${dayIndex}`).required = false;
+            }
+        }
+
+        async function saveWorkoutEdit(event, planId, date, dayIndex) {
+            event.preventDefault();
+
+            const isRestDay = document.getElementById(`edit-workout-rest-${planId}-${dayIndex}`).checked;
+
+            if (isRestDay) {
+                // Set as rest day
+                try {
+                    const res = await fetch(`${API_BASE}/api/workout-plan/${planId}`, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            date: date,
+                            workout: null
+                        })
+                    });
+                    const result = await res.json();
+                    if (result.success) {
+                        showToast('Workout updated!', 'success');
+                        // Auto-update shopping list (in case meal plans changed)
+                        generateShoppingList();
+                        loadWorkoutPlan(planId);
+                        // Auto-update shopping list (in case meal plans changed)
+                        generateShoppingList();
+                    } else {
+                        showToast('Error: ' + (result.error || 'Failed to update'), 'error');
+                    }
+                } catch (error) {
+                    showToast('Error: ' + error.message, 'error');
+                }
+            } else {
+                // Add/edit workout
+                const workoutName = document.getElementById(`edit-workout-name-${planId}-${dayIndex}`).value.trim();
+                const duration = parseInt(document.getElementById(`edit-workout-duration-${planId}-${dayIndex}`).value) || 30;
+                const workoutType = document.getElementById(`edit-workout-type-${planId}-${dayIndex}`).value.trim();
+
+                if (!workoutName || !workoutType) {
+                    showToast('Workout name and type are required', 'error');
+                    return;
+                }
+
+                const workoutData = {
+                    id: `workout_${date}`,
+                    name: workoutName,
+                    type: workoutType,
+                    difficulty: 'medium',
+                    description: '',
+                    exercises: []
+                };
+
+                try {
+                    const res = await fetch(`${API_BASE}/api/workout-plan/${planId}`, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            date: date,
+                            workout: workoutData
+                        })
+                    });
+                    const result = await res.json();
+                    if (result.success) {
+                        showToast('Workout updated!', 'success');
+                        // Auto-update shopping list (in case meal plans changed)
+                        generateShoppingList();
+                        loadWorkoutPlan(planId);
+                        // Auto-update shopping list (in case meal plans changed)
+                        generateShoppingList();
+                    } else {
+                        showToast('Error: ' + (result.error || 'Failed to update'), 'error');
+                    }
+                } catch (error) {
+                    showToast('Error: ' + error.message, 'error');
+                }
+            }
+        }
+
+        // Store manually added items
+        let manualShoppingItems = JSON.parse(localStorage.getItem('manualShoppingItems') || '[]');
+        let shoppingCategories = JSON.parse(localStorage.getItem('shoppingCategories') || '[]');
+
+        function updateCategoryList() {
+            const categoryList = document.getElementById('categoryList');
+            if (categoryList) {
+                categoryList.innerHTML = shoppingCategories.map(cat => `<option value="${cat}">`).join('');
+            }
+        }
+
+        function saveManualShopping(event) {
+            event.preventDefault();
+
+            const category = document.getElementById('shoppingCategory').value.trim();
+            const itemName = document.getElementById('shoppingItemName').value.trim();
+            const quantity = parseFloat(document.getElementById('shoppingQuantity').value);
+            const unit = document.getElementById('shoppingUnit').value.trim();
+
+            if (!category || !itemName || !quantity || !unit) {
+                showToast('All fields are required', 'error');
+                return;
+            }
+
+            // Add category if new
+            if (!shoppingCategories.includes(category)) {
+                shoppingCategories.push(category);
+                localStorage.setItem('shoppingCategories', JSON.stringify(shoppingCategories));
+                updateCategoryList();
+            }
+
+            // Add item
+            const item = {
+                id: `manual_${Date.now()}`,
+                name: itemName,
+                quantity: quantity,
+                unit: unit,
+                category: category,
+                is_optional: false,
+                is_manual: true
+            };
+
+            manualShoppingItems.push(item);
+            localStorage.setItem('manualShoppingItems', JSON.stringify(manualShoppingItems));
+
+            // Clear form
+            document.getElementById('shoppingEntryForm').reset();
+            showToast('Item added!', 'success');
+
+            // Auto-refresh shopping list
+            generateShoppingList();
+        }
+
+        function groupItemsByCategory(items) {
+            const grouped = {};
+            items.forEach(item => {
+                const cat = item.category || 'other';
+                if (!grouped[cat]) {
+                    grouped[cat] = [];
+                }
+                grouped[cat].push(item);
+            });
+            return grouped;
+        }
+
+        function displayShoppingListWithManual(shoppingList, elementId) {
+            const container = document.getElementById(elementId);
+            let html = '';
+
+            // Merge generated and manual items by category
+            const allByCategory = {};
+
+            // Add generated items
+            if (shoppingList.by_category) {
+                Object.entries(shoppingList.by_category).forEach(([category, items]) => {
+                    if (!allByCategory[category]) {
+                        allByCategory[category] = [];
+                    }
+                    allByCategory[category].push(...items);
+                });
+            } else if (shoppingList.items) {
+                shoppingList.items.forEach(item => {
+                    const cat = item.category || 'other';
+                    if (!allByCategory[cat]) {
+                        allByCategory[cat] = [];
+                    }
+                    allByCategory[cat].push(item);
+                });
+            }
+
+            // Add manual items
+            manualShoppingItems.forEach(item => {
+                const cat = item.category || 'other';
+                if (!allByCategory[cat]) {
+                    allByCategory[cat] = [];
+                }
+                allByCategory[cat].push(item);
+            });
+
+            if (Object.keys(allByCategory).length > 0) {
+                Object.entries(allByCategory).forEach(([category, items]) => {
+                    html += `
+                        <div class="shopping-category">
+                            <div class="category-header">${category}</div>
+                            ${items.map((item, index) => {
+                        const itemId = `item-${category}-${index}-${item.id || index}`;
+                        return `
+                                    <div class="shopping-item" data-item-id="${itemId}" data-state="none">
+                                        <div class="shopping-item-name">${item.name}</div>
+                                        <div class="shopping-item-quantity">${item.quantity} ${item.unit || ''}</div>
+                                        <div class="shopping-actions">
+                                            <button class="btn-accept" style="padding: var(--spacing-xs) var(--spacing-md); font-size: 0.75rem;" onclick="acceptItem('${itemId}')">Accept</button>
+                                            <button class="btn-reject" style="padding: var(--spacing-xs) var(--spacing-md); font-size: 0.75rem;" onclick="rejectItem('${itemId}')">Reject</button>
+                                        </div>
+                                    </div>
+                                `;
+                    }).join('')}
+                        </div>
+                    `;
+                });
+            } else {
+                html = '<div class="loading">No items in shopping list. Generate a list or add items manually.</div>';
+            }
+
+            container.innerHTML = html;
+        }
+
+        // Accept/Reject Functions
+        function acceptMeal(mealId, mealType) {
+            const card = document.querySelector(`[data-meal-id="${mealId}"]`);
+            const actions = card.querySelector('.meal-actions');
+            actions.innerHTML = '<span class="status-badge status-accepted">Accepted</span>';
+            card.style.borderLeft = '4px solid var(--success)';
+        }
+
+        function rejectMeal(mealId, mealType) {
+            const card = document.querySelector(`[data-meal-id="${mealId}"]`);
+            const actions = card.querySelector('.meal-actions');
+            actions.innerHTML = '<span class="status-badge status-rejected">Rejected</span>';
+            card.style.borderLeft = '4px solid var(--error)';
+        }
+
+        // Form Handlers
+        document.getElementById('profileForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const formData = new FormData(e.target);
+            const data = Object.fromEntries(formData);
+            data.dietary_preferences = formData.getAll('dietary_preferences');
+            data.fitness_goals = formData.getAll('fitness_goals');
+
+            try {
+                const res = await fetch(`${API_BASE}/api/profile`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+                const result = await res.json();
+                if (result.success) {
+                    alert('Profile saved!');
+                } else {
+                    alert('Error: ' + (result.error || 'Failed to save profile'));
+                }
+            } catch (error) {
+                alert('Error: ' + error.message);
+            }
+        });
+
+        document.getElementById('progressForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const formData = new FormData(e.target);
+            const data = Object.fromEntries(formData);
+
+            try {
+                const res = await fetch(`${API_BASE}/api/progress`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+                const result = await res.json();
+                if (result.success) {
+                    alert('Progress logged!');
+                    e.target.reset();
+                } else {
+                    alert('Error: ' + (result.error || 'Failed to log progress'));
+                }
+            } catch (error) {
+                alert('Error: ' + error.message);
+            }
+        });
+
+        async function getProgressSummary() {
+            showLoading('progressResult');
+            try {
+                const res = await fetch(`${API_BASE}/api/progress/summary`);
+                const result = await res.json();
+                if (result.success && result.summary) {
+                    // Display summary
+                    document.getElementById('progressResult').innerHTML = `
+                        <div class="progress-summary">
+                            <div class="progress-stat">
+                                <div class="progress-stat-value">${result.summary.average_weight || 'N/A'}</div>
+                                <div class="progress-stat-label">Avg Weight (kg)</div>
+                            </div>
+                            <div class="progress-stat">
+                                <div class="progress-stat-value">${result.summary.total_workouts || 0}</div>
+                                <div class="progress-stat-label">Total Workouts</div>
+                            </div>
+                        </div>
+                    `;
+                } else {
+                    showError('progressResult', result.error || 'No progress data found');
+                }
+            } catch (error) {
+                showError('progressResult', error.message);
+            }
+        }
+
+        // Initialize
+        window.addEventListener('DOMContentLoaded', () => {
+            loadMealPlans();
+        });
+    </script>
+</body>
+
+</html>

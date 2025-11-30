@@ -1,159 +1,76 @@
-# NutriFit 🏋️‍♀️🥗
+# NutriFit
 
-NutriFit is an AI-powered **offline** health assistant that generates personalized meal plans and workout routines based on user dietary preferences, fitness goals, and available ingredients or equipment. Users can receive daily or weekly recommendations, optimize shopping lists, and track progress—all without requiring cloud services or API keys.
+NutriFit is an AI-powered **offline** mobile health assistant that generates personalized meal plans and workout routines based on user dietary preferences, fitness goals, and available ingredients or equipment. Users can receive weekly recommendations, optimize shopping lists, and track progress—all without requiring cloud services or API keys.
 
 ## ✨ Features
 
-- **Personalized Meal Plans**: Generate daily or weekly meal plans based on your dietary preferences, allergies, and pantry items
-- **Custom Workout Routines**: Get workout plans tailored to your fitness goals and available equipment
+- **Personalized Meal Plans**: Generate weekly meal plans based on your dietary preferences, allergies, and pantry items
+- **Custom Workout Routines**: Get weekly workout plans tailored to your fitness goals and available equipment
 - **Semantic Recipe/Workout Search**: Find recipes and workouts using natural language queries with AI-powered matching
-- **Shopping List Optimization**: Automatically generate and optimize shopping lists from meal plans
+- **Auto-Generated Shopping Lists**: Automatically generate and update shopping lists from meal plans, organized by week
 - **Progress Tracking**: Track weight, calories, workouts, and more over time
 - **100% Offline**: Works completely offline using local AI models—no cloud or API keys required
+- **Mobile-First Web Interface**: Beautiful, responsive UI optimized for mobile devices
+- **Week-Based Planning**: Navigate between weeks to view and generate plans for any time period
+- **Manual Editing**: Edit meal and workout plans directly in the app
 - **Modular & Lightweight**: Minimal dependencies with optional AI enhancements
 
 ## 🚀 Quick Start
 
-### Installation
+### Step 1: Install Dependencies
 
 ```bash
-# Clone the repository
-git clone https://github.com/tayxuenye/NutriFit.git
-cd NutriFit
-
-# Install the package
+# Install the package and required dependencies
 pip install -e .
 
-# Optional: Install with AI embeddings support
-pip install -e ".[embeddings]"
-
-# Optional: Install with local LLM support
-pip install -e ".[llm]"
-
-# Or install everything
-pip install -e ".[all]"
+# That's it! The app will automatically install transformers and GPT-2 on first run.
 ```
 
-### Basic Usage
+### Step 2: Run the Web App
 
 ```bash
-# Create your profile
-nutrifit profile create
-
-# Generate a daily meal plan
-nutrifit meal daily
-
-# Generate a weekly meal plan
-nutrifit meal weekly
-
-# Search for recipes
-nutrifit meal search --query "high protein vegetarian"
-
-# Generate a weekly workout plan
-nutrifit workout weekly
-
-# Generate a shopping list
-nutrifit shopping generate
-
-# Track your progress
-nutrifit progress log --weight 70 --calories 2000 --workouts 1
-
-# View progress summary
-nutrifit progress summary
+# Start the web server
+python -m nutrifit.web
 ```
 
-## 📖 CLI Commands
+The server will start on `http://localhost:5000` (or `http://0.0.0.0:5000`).
 
-### Profile Management
+### Step 3: Access from Your Phone
 
-```bash
-# Show current profile
-nutrifit profile show
+1. **Find your computer's IP address:**
+   - Windows: Open Command Prompt and run `ipconfig` (look for IPv4 Address)
+   - Mac/Linux: Run `ifconfig` or `ip addr`
 
-# Create a new profile (interactive)
-nutrifit profile create
+2. **On your phone's browser**, go to:
+   ```
+   http://YOUR_IP_ADDRESS:5000
+   ```
+   For example: `http://192.168.1.100:5000`
 
-# Update pantry items
-nutrifit profile update-pantry --items "rice,beans,chicken"
+3. **Or use localhost** if testing on the same device:
+   ```
+   http://localhost:5000
+   ```
 
-# Update available equipment
-nutrifit profile update-equipment --items "dumbbells,barbell,bench"
-```
+**Note:** On first run, the app will automatically download GPT-2 (~500MB). This only happens once!
 
-### Meal Planning
+### Web Interface Features
 
-```bash
-# Generate today's meal plan
-nutrifit meal daily
+- **Profile Management**: Create and update your profile with dietary preferences, fitness goals, allergies, and equipment
+- **Meal Planning**: Generate weekly meal plans with week navigation. Edit meals directly in the app
+- **Workout Planning**: Get personalized weekly workout routines. Edit workouts or mark rest days
+- **Shopping Lists**: Automatically generated and updated shopping lists organized by week
+- **Progress Tracking**: Log your daily progress and view summaries
+- **Meal Instructions**: View detailed cooking instructions for each meal
+- **Workout Details**: See detailed exercise information including sets, reps, and rest periods
 
-# Generate a weekly meal plan (saved automatically)
-nutrifit meal weekly
+## 📖 API Usage (For Developers)
 
-# Search for recipes
-nutrifit meal search --query "quick healthy dinner"
-
-# Search with filters
-nutrifit meal search --query "breakfast" --meal-type breakfast --limit 10
-
-# Get AI meal suggestion
-nutrifit meal suggest --meal-type lunch
-```
-
-### Workout Planning
-
-```bash
-# Generate today's workout
-nutrifit workout daily
-
-# Generate a weekly workout plan
-nutrifit workout weekly --days 4
-
-# Search for workouts
-nutrifit workout search --query "upper body strength"
-
-# Filter by workout type
-nutrifit workout search --workout-type hiit --limit 5
-
-# Get AI workout suggestion
-nutrifit workout suggest --duration 30
-```
-
-### Shopping Lists
-
-```bash
-# Generate shopping list from latest meal plan
-nutrifit shopping generate
-
-# Generate optimized shopping list
-nutrifit shopping generate --optimize
-
-# Generate from specific plan
-nutrifit shopping generate --plan-id mp_abc123
-```
-
-### Progress Tracking
-
-```bash
-# Log daily progress
-nutrifit progress log --weight 70.5 --calories 1800 --workouts 1
-
-# Log with mood and energy
-nutrifit progress log --weight 70 --mood 8 --energy 7
-
-# View summary
-nutrifit progress summary
-
-# View history
-nutrifit progress history
-```
-
-## 🐍 Python API
+You can also use NutriFit programmatically:
 
 ```python
+from nutrifit.api import generate_meal_plan, generate_workout_plan, optimize_shopping_list
 from nutrifit.models.user import UserProfile, DietaryPreference, FitnessGoal
-from nutrifit.engines.meal_planner import MealPlannerEngine
-from nutrifit.engines.workout_planner import WorkoutPlannerEngine
-from nutrifit.utils.shopping_list import ShoppingListOptimizer
 
 # Create a user profile
 profile = UserProfile(
@@ -168,39 +85,88 @@ profile = UserProfile(
 )
 
 # Generate a weekly meal plan
-meal_planner = MealPlannerEngine()
-meal_plan = meal_planner.generate_weekly_plan(profile)
-
-print(f"Generated meal plan: {meal_plan.name}")
-for day in meal_plan.daily_plans:
-    print(f"{day.date}: {day.breakfast.name if day.breakfast else 'No breakfast'}")
+meal_plan = generate_meal_plan(profile, duration_days=7)
 
 # Generate a workout plan
-workout_planner = WorkoutPlannerEngine()
-workout_plan = workout_planner.generate_weekly_plan(profile)
+workout_plan = generate_workout_plan(profile, duration_days=7)
 
 # Generate shopping list
-optimizer = ShoppingListOptimizer()
-shopping_list = optimizer.generate_from_meal_plan(
-    meal_plan,
-    pantry_items=profile.pantry_items
-)
-
-# Search for recipes
-results = meal_planner.search_recipes("quick healthy breakfast")
-for recipe, score in results[:5]:
-    print(f"{recipe.name}: {score:.2f}")
+shopping_list = optimize_shopping_list(meal_plan, user=profile)
 ```
+
+### Web API Endpoints
+
+The web interface exposes RESTful API endpoints:
+
+- `GET /api/profile` - Get user profile
+- `POST /api/profile` - Update user profile
+- `POST /api/meal-plan/weekly` - Generate weekly meal plan
+- `GET /api/meal-plans` - List all meal plans
+- `GET /api/meal-plan/<id>` - Get specific meal plan
+- `PUT /api/meal-plan/<id>` - Update meal plan entry
+- `POST /api/workout-plan/weekly` - Generate weekly workout plan
+- `GET /api/workout-plans` - List all workout plans
+- `GET /api/workout-plan/<id>` - Get specific workout plan
+- `PUT /api/workout-plan/<id>` - Update workout plan entry
+- `POST /api/shopping-list` - Generate shopping list
+- `POST /api/progress` - Log progress
+- `GET /api/progress/summary` - Get progress summary
+
+## 🛠️ Tech Stack
+
+### Backend
+- **Python 3.10+** - Core programming language
+- **Flask** - Web framework for RESTful API and web interface
+- **NumPy** - Numerical operations and data processing
+- **sentence-transformers** (optional) - Semantic search and embeddings
+- **transformers + PyTorch** (optional) - Local LLM support (GPT-2)
+- **llama-cpp-python** (optional) - Efficient GGUF model inference
+
+### Frontend
+- **HTML5** - Structure and semantic markup
+- **CSS3** - Styling with CSS variables and responsive design
+- **Vanilla JavaScript** - Client-side interactivity and API communication
+- **Mobile-First Design** - Responsive UI optimized for mobile devices
+
+### Data Storage
+- **JSON** - Local file-based storage for profiles, plans, and progress
+- **File System** - Data stored in `~/.nutrifit/data/` directory
+
+### AI/ML
+- **Embedding Engine** - Semantic similarity search for recipes and workouts
+- **Local LLM** - GPT-2 or GGUF models for creative meal/workout suggestions
+- **Fallback System** - Template-based suggestions when AI models unavailable
+
+### Architecture Patterns
+- **RESTful API** - Clean separation between frontend and backend
+- **Modular Design** - Separate route handlers for each feature
+- **MVC-like Structure** - Models, views (templates), and controllers (routes)
 
 ## 🏗️ Architecture
 
 ```
 nutrifit/
-├── models/           # Data models (User, Recipe, Workout, Plan, Progress)
-├── data/            # Sample recipe and workout databases
-├── engines/         # AI engines (Embedding, LLM, MealPlanner, WorkoutPlanner)
-├── utils/           # Utilities (ShoppingList, Storage)
-└── cli.py           # Command-line interface
+├── models/              # Data models (User, Recipe, Workout, Plan, Progress)
+├── data/               # Sample recipe and workout databases
+├── engines/            # AI engines (Embedding, LLM, MealPlanner, WorkoutPlanner)
+├── utils/              # Utilities (ShoppingList, Storage)
+├── templates/          # Web interface HTML templates
+│   └── index.html      # Main mobile-friendly UI
+├── web/                # Web interface (Flask application)
+│   ├── __init__.py     # Flask app initialization
+│   ├── __main__.py     # Entry point for `python -m nutrifit.web`
+│   ├── middleware.py   # Request logging and CORS handling
+│   ├── utils.py        # Web utilities (profile management)
+│   └── routes/         # API route handlers
+│       ├── __init__.py # Route registration
+│       ├── main.py     # Main routes (home, test)
+│       ├── profile.py  # Profile management routes
+│       ├── meal_plans.py    # Meal plan routes
+│       ├── workout_plans.py # Workout plan routes
+│       ├── shopping.py      # Shopping list routes
+│       └── progress.py      # Progress tracking routes
+├── api.py              # Modular function interfaces
+└── display.py          # Display formatting functions
 ```
 
 ### Key Components
@@ -209,91 +175,93 @@ nutrifit/
 - **LocalLLMEngine**: Optional local LLM for creative suggestions (llama-cpp-python)
 - **MealPlannerEngine**: Generates meal plans based on preferences and nutritional goals
 - **WorkoutPlannerEngine**: Creates workout routines based on fitness goals and equipment
-- **ShoppingListOptimizer**: Consolidates and categorizes shopping lists
-- **DataStorage**: JSON-based local storage for offline data persistence
+- **Web Interface**: Modular Flask web app with separate route handlers for each feature
+- **DataStorage**: Local file-based storage for profiles, plans, and progress data
 
-## 📊 Supported Features
+## 🔧 Configuration
 
-### Dietary Preferences
-- Vegetarian, Vegan, Pescatarian
-- Keto, Paleo, Low-Carb
-- Gluten-Free, Dairy-Free
-- High-Protein
+### Web Server Settings
 
-### Fitness Goals
-- Weight Loss, Muscle Gain
-- Strength, Endurance, Flexibility
-- General Fitness, Maintenance
-
-### Workout Types
-- Strength Training
-- HIIT (High-Intensity Interval Training)
-- Cardio
-- Flexibility/Yoga
-- Bodyweight/Home Workouts
-
-## 🧪 Running Tests
-
-```bash
-# Install dev dependencies
-pip install -e ".[dev]"
-
-# Run tests
-pytest
-
-# Run with coverage
-pytest --cov=nutrifit
-```
-
-## 🤖 AI Configuration
-
-### Embeddings (Recommended)
-
-Install sentence-transformers for improved recipe/workout matching:
-
-```bash
-pip install sentence-transformers
-```
-
-The system uses the `all-MiniLM-L6-v2` model by default, which is lightweight (~80MB) and works well offline.
-
-### Local LLM (Optional)
-
-For creative AI suggestions, you can use a local LLM:
-
-```bash
-pip install llama-cpp-python
-```
-
-Then download a GGUF model and configure:
+You can customize the web server by editing `nutrifit/web/__init__.py` or passing parameters:
 
 ```python
-from nutrifit.engines.llm_engine import LocalLLMEngine
+from nutrifit.web import run
 
-llm = LocalLLMEngine(model_path="/path/to/model.gguf")
-suggestion = llm.suggest_meal(
-    dietary_preferences=["vegetarian"],
-    available_ingredients=["rice", "beans"],
-    meal_type="dinner",
-    calorie_target=500,
-)
+# Change host and port
+run(host="0.0.0.0", port=8080, debug=False)
 ```
 
-**Note**: Without a local LLM, the system uses template-based suggestions that still provide helpful recommendations.
+Or when running as a module:
 
-## 📁 Data Storage
-
-All data is stored locally in `~/.nutrifit/`:
-
+```bash
+# Run with custom settings
+python -m nutrifit.web --host 0.0.0.0 --port 8080
 ```
-~/.nutrifit/
-├── data/
-│   ├── users/          # User profiles
-│   ├── meal_plans/     # Saved meal plans
-│   ├── workout_plans/  # Saved workout plans
-│   └── progress/       # Progress tracking data
-└── embeddings/         # Cached embeddings
+
+### Data Storage
+
+All data is stored locally in `~/.nutrifit/data/`:
+- User profiles
+- Meal plans
+- Workout plans
+- Progress tracking data
+
+## 📝 Requirements
+
+- Python 3.10+
+- NumPy (required)
+- Flask (for web interface)
+- Optional: sentence-transformers (for better AI matching)
+- Optional: transformers + torch (for GPT-2 and other Hugging Face models)
+- Optional: llama-cpp-python (for GGUF model support)
+
+Install with optional dependencies:
+
+```bash
+# Install with all optional AI features
+pip install -e ".[all]"
+
+# Or install specific features
+pip install -e ".[embeddings]"  # For semantic search
+pip install -e ".[llm]"         # For local LLM support
 ```
+
+## 🤖 Using a Local LLM
+
+The app automatically uses a local LLM if available - no configuration needed!
+
+### Option 1: GPT-2 (Easiest - Recommended)
+
+Just install transformers and the app will automatically use GPT-2:
+```bash
+pip install transformers torch
+```
+
+The app will detect and use GPT-2 on startup - no setup required!
+
+### Option 2: GGUF Models (More Efficient)
+
+1. **Install llama-cpp-python:**
+   ```bash
+   pip install llama-cpp-python
+   ```
+
+2. **Place a `.gguf` model file** in the `models/` directory:
+   - Download from [Hugging Face](https://huggingface.co/models?library=gguf)
+   - Recommended: Small models like `phi-2`, `tinyllama`, or `mistral-7b-instruct`
+   - Place in `models/` directory in the project root
+
+3. **Run the app** - it will automatically detect and use the GGUF model!
+
+The app will gracefully fall back to template-based suggestions if:
+- No model is found
+- Required libraries are not installed
+- The model fails to load
+
+**Priority order:**
+1. GGUF files in `models/` directory (if llama-cpp-python installed)
+2. GPT-2 via transformers (if transformers installed)
+3. Template-based fallback (always available)
 
 ## 🤝 Contributing
 
@@ -301,10 +269,4 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 
 ## 📄 License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
-## 🙏 Acknowledgments
-
-- Recipe and workout databases are for demonstration purposes
-- Uses sentence-transformers for semantic search
-- Designed for complete offline functionality
+MIT License - see LICENSE file for details

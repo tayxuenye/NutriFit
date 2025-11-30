@@ -3,6 +3,7 @@
 import random
 import uuid
 from datetime import date, timedelta
+from typing import Any
 
 from nutrifit.data.workouts import get_sample_workouts
 from nutrifit.engines.embedding_engine import EmbeddingEngine
@@ -34,9 +35,9 @@ class WorkoutPlannerEngine:
             workouts: List of available workouts (defaults to sample workouts)
         """
         self.embedding_engine = embedding_engine or EmbeddingEngine()
-        self.llm_engine = llm_engine or LocalLLMEngine(use_fallback=True)
+        self.llm_engine = llm_engine or LocalLLMEngine()
         self.workouts = workouts or get_sample_workouts()
-        self._workout_embeddings: dict[str, any] = {}
+        self._workout_embeddings: dict[str, Any] = {}
         self._initialize_workout_embeddings()
 
     def _initialize_workout_embeddings(self) -> None:
