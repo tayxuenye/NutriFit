@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Message Rendering Test</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            max-width: 600px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f8fafc;
+        }
+        
+        .test-section {
+            background: white;
+            padding: 20px;
+            margin-bottom: 20px;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        
+        .test-title {
+            font-size: 1.25rem;
+            font-weight: 700;
+            margin-bottom: 15px;
+            color: #1e293b;
+        }
+        
+        .message-bubble {
+            background: white;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 16px 20px;
+            margin-bottom: 15px;
+        }
+        
+        .plan-save-actions {
+            display: flex;
+            gap: 12px;
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 2px solid #e2e8f0;
+        }
+        
+        .btn-save-plan {
+            flex: 1;
+            padding: 12px 20px;
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 0.9375rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3);
+        }
+        
+        .btn-save-plan:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4);
+        }
+        
+        .btn-save-plan.saving {
+            opacity: 0.7;
+            cursor: wait;
+            background: linear-gradient(135deg, #6b7280 0%, #4b5563 100%);
+        }
+        
+        .btn-save-plan.saved {
+            background: linear-gradient(135deg, #6b7280 0%, #4b5563 100%);
+            cursor: not-allowed;
+            opacity: 0.8;
+        }
+        
+        .btn-regenerate {
+            flex: 1;
+            padding: 12px 20px;
+            background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+            color: #1e293b;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 0.9375rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .btn-regenerate:hover {
+            border-color: #6366f1;
+            background: linear-gradient(135deg, #a5b4fc 0%, #e0e7ff 100%);
+            transform: translateY(-2px);
+        }
+        
+        .status {
+            padding: 10px;
+            margin-top: 10px;
+            border-radius: 8px;
+            font-size: 0.875rem;
+        }
+        
+        .status.success {
+            background: #d1fae5;
+            color: #065f46;
+        }
+        
+        .status.info {
+            background: #dbeafe;
+            color: #1e40af;
+        }
+    </style>
+</head>
+<body>
+    <h1 style="text-align: center; color: #1e293b;">Message Rendering Test</h1>
+    
+    <div class="test-section">
+        <div class="test-title">Test 1: Meal Plan Response with Save Button</div>
+        <div class="message-bubble">
+            <div class="message-content">
+                <strong>Great! Here's your personalized meal plan:</strong><br><br>
+                <strong>📅 Day 1</strong> (Monday)<br>
+                🍳 Breakfast: Oatmeal with berries (~350 kcal)<br>
+                🥗 Lunch: Grilled chicken salad (~450 kcal)<br>
+                🍽️ Dinner: Salmon with vegetables (~500 kcal)<br>
+                🍎 Snack: Greek yogurt (~150 kcal)<br>
+                📊 Daily Total: ~1450 kcal
+            </div>
+            <div class="plan-save-actions">
+                <button class="btn-save-plan" onclick="testSave(this, 'meal')">
+                    💾 Save to Meal Plans
+                </button>
+                <button class="btn-regenerate" onclick="alert('Regenerate clicked!')">
+                    🔄 Regenerate
+                </button>
+            </div>
+        </div>
+        <div id="status1" class="status" style="display: none;"></div>
+    </div>
+    
+    <div class="test-section">
+        <div class="test-title">Test 2: Workout Plan Response with Save Button</div>
+        <div class="message-bubble">
+            <div class="message-content">
+                <strong>Here's your workout plan:</strong><br><br>
+                <strong>Day 1 - Upper Body</strong><br>
+                💪 Push-ups: 3 sets × 12 reps<br>
+                💪 Dumbbell rows: 3 sets × 10 reps<br>
+                💪 Shoulder press: 3 sets × 10 reps<br>
+                Total Duration: ~45 minutes
+            </div>
+            <div class="plan-save-actions">
+                <button class="btn-save-plan" onclick="testSave(this, 'workout')">
+                    💾 Save to Workout Plans
+                </button>
+                <button class="btn-regenerate" onclick="alert('Regenerate clicked!')">
+                    🔄 Regenerate
+                </button>
+            </div>
+        </div>
+        <div id="status2" class="status" style="display: none;"></div>
+    </div>
+    
+    <div class="test-section">
+        <div class="test-title">Test 3: Regular Message (No Save Button)</div>
+        <div class="message-bubble">
+            <div class="message-content">
+                <strong>Hello! How can I help you today?</strong><br><br>
+                I can help you with:<br>
+                • Creating meal plans<br>
+                • Designing workout routines<br>
+                • Answering nutrition questions
+            </div>
+            <!-- No save button for regular messages -->
+        </div>
+    </div>
+    
+    <script>
+        function testSave(button, planType) {
+            // Check if already saved
+            if (button.classList.contains('saved')) {
+                const statusDiv = button.closest('.test-section').querySelector('.status');
+                statusDiv.textContent = 'Plan already saved!';
+                statusDiv.className = 'status info';
+                statusDiv.style.display = 'block';
+                return;
+            }
+            
+            // Set loading state
+            button.classList.add('saving');
+            button.disabled = true;
+            const originalText = button.innerHTML;
+            button.innerHTML = '⏳ Saving...';
+            
+            // Simulate API call
+            setTimeout(() => {
+                // Set saved state
+                button.classList.remove('saving');
+                button.classList.add('saved');
+                button.innerHTML = '✅ Saved!';
+                
+                // Show success message
+                const statusDiv = button.closest('.test-section').querySelector('.status');
+                statusDiv.textContent = `✅ ${planType === 'meal' ? 'Meal' : 'Workout'} plan saved successfully!`;
+                statusDiv.className = 'status success';
+                statusDiv.style.display = 'block';
+            }, 1500);
+        }
+    </script>
+</body>
+</html>

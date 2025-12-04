@@ -172,6 +172,11 @@ def optimize_shopping_list(
         else:
             pantry_items = []
     
+    # Ensure pantry_items is a list, not a string
+    if isinstance(pantry_items, str):
+        # If it's a non-empty string, treat it as a single item or empty list
+        pantry_items = [pantry_items] if pantry_items.strip() and len(pantry_items) > 3 else []
+    
     return shopping_optimizer.generate_from_meal_plan(meal_plan, pantry_items)
 
 

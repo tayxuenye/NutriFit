@@ -282,29 +282,58 @@ def update_workout_plan(plan_id):
             return jsonify({"error": "Date not found in plan"}), 404
         
         if workout_data:
-            # Create exercises
+            # Create exercises from provided data, or keep existing exercises
             exercises = []
-            for idx, ex_data in enumerate(workout_data.get("exercises", [])):
-                exercise = Exercise(
-                    id=ex_data.get("id", f"ex_{target_date}_{idx}"),
-                    name=ex_data.get("name", ""),
-                    description=ex_data.get("description", ""),
-                    muscle_groups=[MuscleGroup.FULL_BODY],  # Default to full body
-                    exercise_type=ExerciseType.STRENGTH,  # Default to strength
-                    sets=ex_data.get("sets", 0),
-                    reps=ex_data.get("reps", 10) if ex_data.get("reps") else None,
-                    duration_seconds=ex_data.get("duration_seconds", 0) if ex_data.get("duration_seconds") else None,
-                    rest_seconds=ex_data.get("rest_seconds", 60),
-                )
-                exercises.append(exercise)
+            exercises_data = workout_data.get("exercises", [])
+            
+            if exercises_data:
+                for idx, ex_data in enumerate(exercises_data):
+                    exercise = Exercise(
+                        id=ex_data.get("id", f"ex_{target_date}_{idx}"),
+                        name=ex_data.get("name", ""),
+                        description=ex_data.get("description", ""),
+                        muscle_groups=[MuscleGroup.FULL_BODY],  # Default to full body
+                        exercise_type=ExerciseType.STRENGTH,  # Default to strength
+                        sets=ex_data.get("sets", 3),
+                        reps=ex_data.get("reps", 10) if ex_data.get("reps") else None,
+                        duration_seconds=ex_data.get("duration_seconds") if ex_data.get("duration_seconds") else None,
+                        rest_seconds=ex_data.get("rest_seconds", 60),
+                    )
+                    exercises.append(exercise)
+            else:
+                # If no exercises provided, keep existing exercises from the daily plan
+                if daily_plan.workouts:
+                    exercises = daily_plan.workouts[0].exercises
+                else:
+                    # Create a default placeholder exercise
+                    exercises = [Exercise(
+                        id=f"ex_{target_date}_0",
+                        name=workout_data.get("name", "Workout"),
+                        description="",
+                        muscle_groups=[MuscleGroup.FULL_BODY],
+                        exercise_type=ExerciseType.STRENGTH,
+                        sets=3,
+                        reps=10,
+                    )]
+            
+            # Normalize difficulty value
+            difficulty = workout_data.get("difficulty", "intermediate")
+            if difficulty not in ["beginner", "intermediate", "advanced"]:
+                difficulty = "intermediate"
+            
+            # Get duration from request or calculate from exercises
+            duration_minutes = workout_data.get("duration_minutes", 30)
+            if isinstance(duration_minutes, str):
+                duration_minutes = int(duration_minutes) if duration_minutes.isdigit() else 30
             
             workout = Workout(
                 id=workout_data.get("id", f"workout_{target_date}"),
                 name=workout_data.get("name", ""),
                 workout_type=workout_data.get("type", "general"),
-                difficulty=workout_data.get("difficulty", "medium"),
+                difficulty=difficulty,
                 description=workout_data.get("description", ""),
                 exercises=exercises,
+                duration_minutes=duration_minutes,
             )
             
             daily_plan.workouts = [workout]

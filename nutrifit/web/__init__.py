@@ -26,7 +26,7 @@ from nutrifit.web import middleware, routes  # noqa: E402
 routes.register_routes(app)
 
 
-def run(host="0.0.0.0", port=5000, debug=False):
+def run(host="0.0.0.0", port=8000, debug=False):
     """Run the web server."""
     import sys
     print("=" * 50, file=sys.stderr)

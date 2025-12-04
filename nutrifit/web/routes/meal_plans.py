@@ -378,56 +378,60 @@ def get_meal_plan(plan_id):
                 plan_data["meals"].append({
                     "type": "breakfast",
                     "name": daily_plan.breakfast.name,
-                    "description": daily_plan.breakfast.description,
+                    "description": daily_plan.breakfast.description or "",
                     "calories": daily_plan.breakfast.nutrition.calories,
                     "protein": daily_plan.breakfast.nutrition.protein_g,
                     "carbs": daily_plan.breakfast.nutrition.carbs_g,
                     "fat": daily_plan.breakfast.nutrition.fat_g,
                     "prep_time": daily_plan.breakfast.prep_time_minutes,
                     "cook_time": daily_plan.breakfast.cook_time_minutes,
-                    "ingredients": [ing.name for ing in daily_plan.breakfast.ingredients],
+                    "ingredients": [ing.name for ing in (daily_plan.breakfast.ingredients or [])],
+                    "instructions": daily_plan.breakfast.instructions or [],
                 })
             
             if daily_plan.lunch:
                 plan_data["meals"].append({
                     "type": "lunch",
                     "name": daily_plan.lunch.name,
-                    "description": daily_plan.lunch.description,
+                    "description": daily_plan.lunch.description or "",
                     "calories": daily_plan.lunch.nutrition.calories,
                     "protein": daily_plan.lunch.nutrition.protein_g,
                     "carbs": daily_plan.lunch.nutrition.carbs_g,
                     "fat": daily_plan.lunch.nutrition.fat_g,
                     "prep_time": daily_plan.lunch.prep_time_minutes,
                     "cook_time": daily_plan.lunch.cook_time_minutes,
-                    "ingredients": [ing.name for ing in daily_plan.lunch.ingredients],
+                    "ingredients": [ing.name for ing in (daily_plan.lunch.ingredients or [])],
+                    "instructions": daily_plan.lunch.instructions or [],
                 })
             
             if daily_plan.dinner:
                 plan_data["meals"].append({
                     "type": "dinner",
                     "name": daily_plan.dinner.name,
-                    "description": daily_plan.dinner.description,
+                    "description": daily_plan.dinner.description or "",
                     "calories": daily_plan.dinner.nutrition.calories,
                     "protein": daily_plan.dinner.nutrition.protein_g,
                     "carbs": daily_plan.dinner.nutrition.carbs_g,
                     "fat": daily_plan.dinner.nutrition.fat_g,
                     "prep_time": daily_plan.dinner.prep_time_minutes,
                     "cook_time": daily_plan.dinner.cook_time_minutes,
-                    "ingredients": [ing.name for ing in daily_plan.dinner.ingredients],
+                    "ingredients": [ing.name for ing in (daily_plan.dinner.ingredients or [])],
+                    "instructions": daily_plan.dinner.instructions or [],
                 })
             
             for snack in daily_plan.snacks:
                 plan_data["meals"].append({
                     "type": "snack",
                     "name": snack.name,
-                    "description": snack.description,
+                    "description": snack.description or "",
                     "calories": snack.nutrition.calories,
                     "protein": snack.nutrition.protein_g,
                     "carbs": snack.nutrition.carbs_g,
                     "fat": snack.nutrition.fat_g,
                     "prep_time": snack.prep_time_minutes,
                     "cook_time": snack.cook_time_minutes,
-                    "ingredients": [ing.name for ing in snack.ingredients],
+                    "ingredients": [ing.name for ing in (snack.ingredients or [])],
+                    "instructions": snack.instructions or [],
                 })
         else:
             # Weekly plan

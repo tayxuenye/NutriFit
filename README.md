@@ -4,11 +4,14 @@ NutriFit is an AI-powered **offline** mobile health assistant that generates per
 
 ## ✨ Features
 
+- **AI Chatbot Assistant**: Chat naturally to create meal plans, design workouts, and get nutrition advice
 - **Personalized Meal Plans**: Generate weekly meal plans based on your dietary preferences, allergies, and pantry items
 - **Custom Workout Routines**: Get weekly workout plans tailored to your fitness goals and available equipment
+- **Conversational Modifications**: Ask the chatbot to change meals or workouts through natural language
 - **Semantic Recipe/Workout Search**: Find recipes and workouts using natural language queries with AI-powered matching
 - **Auto-Generated Shopping Lists**: Automatically generate and update shopping lists from meal plans, organized by week
 - **Progress Tracking**: Track weight, calories, workouts, and more over time
+- **Nutrition & Fitness Q&A**: Ask questions and get personalized answers from the AI assistant
 - **100% Offline**: Works completely offline using local AI models—no cloud or API keys required
 - **Mobile-First Web Interface**: Beautiful, responsive UI optimized for mobile devices
 - **Week-Based Planning**: Navigate between weeks to view and generate plans for any time period
@@ -33,7 +36,7 @@ pip install -e .
 python -m nutrifit.web
 ```
 
-The server will start on `http://localhost:5000` (or `http://0.0.0.0:5000`).
+The server will start on `http://localhost:8000` (or `http://0.0.0.0:8000`).
 
 ### Step 3: Access from Your Phone
 
@@ -43,19 +46,20 @@ The server will start on `http://localhost:5000` (or `http://0.0.0.0:5000`).
 
 2. **On your phone's browser**, go to:
    ```
-   http://YOUR_IP_ADDRESS:5000
+   http://YOUR_IP_ADDRESS:8000
    ```
-   For example: `http://192.168.1.100:5000`
+   For example: `http://192.168.1.100:8000`
 
 3. **Or use localhost** if testing on the same device:
    ```
-   http://localhost:5000
+   http://localhost:8000
    ```
 
 **Note:** On first run, the app will automatically download GPT-2 (~500MB). This only happens once!
 
 ### Web Interface Features
 
+- **AI Chatbot**: Chat with the AI assistant to create plans, modify meals/workouts, and ask questions
 - **Profile Management**: Create and update your profile with dietary preferences, fitness goals, allergies, and equipment
 - **Meal Planning**: Generate weekly meal plans with week navigation. Edit meals directly in the app
 - **Workout Planning**: Get personalized weekly workout routines. Edit workouts or mark rest days
@@ -63,6 +67,7 @@ The server will start on `http://localhost:5000` (or `http://0.0.0.0:5000`).
 - **Progress Tracking**: Log your daily progress and view summaries
 - **Meal Instructions**: View detailed cooking instructions for each meal
 - **Workout Details**: See detailed exercise information including sets, reps, and rest periods
+- **Natural Language Interface**: Describe what you want and let the AI create it for you
 
 ## 📖 API Usage (For Developers)
 
@@ -98,16 +103,29 @@ shopping_list = optimize_shopping_list(meal_plan, user=profile)
 
 The web interface exposes RESTful API endpoints:
 
+**Chatbot:**
+- `POST /api/chatbot/chat` - Send message and get AI response
+- `GET /api/chatbot/history` - Get conversation history
+- `POST /api/chatbot/reset` - Reset conversation
+- `GET /api/chatbot/context` - Get current context (plans, etc.)
+
+**Profile:**
 - `GET /api/profile` - Get user profile
 - `POST /api/profile` - Update user profile
+
+**Meal Plans:**
 - `POST /api/meal-plan/weekly` - Generate weekly meal plan
 - `GET /api/meal-plans` - List all meal plans
 - `GET /api/meal-plan/<id>` - Get specific meal plan
 - `PUT /api/meal-plan/<id>` - Update meal plan entry
+
+**Workout Plans:**
 - `POST /api/workout-plan/weekly` - Generate weekly workout plan
 - `GET /api/workout-plans` - List all workout plans
 - `GET /api/workout-plan/<id>` - Get specific workout plan
 - `PUT /api/workout-plan/<id>` - Update workout plan entry
+
+**Shopping & Progress:**
 - `POST /api/shopping-list` - Generate shopping list
 - `POST /api/progress` - Log progress
 - `GET /api/progress/summary` - Get progress summary

@@ -385,6 +385,7 @@ class StorageManager:
                         "start_date": start_date,
                         "end_date": end_date,
                         "created_at": mtime,
+                        "source": data.get("source", "manual"),
                     }
                     
                     # Keep only the latest plan for each date range
@@ -536,6 +537,7 @@ class StorageManager:
                         "end_date": data.get("end_date"),
                         "workout_days_per_week": data.get("workout_days_per_week"),
                         "created_at": mtime,
+                        "source": data.get("source", "manual"),
                     })
             except (CorruptedDataError, PermissionError) as e:
                 logger.warning(f"Skipping corrupted workout plan {path}: {e}")

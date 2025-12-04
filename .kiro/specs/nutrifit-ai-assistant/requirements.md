@@ -155,3 +155,21 @@ The NutriFit AI Assistant is an offline-capable application that generates perso
 2. WHEN the system starts, THE NutriFit System SHALL load existing user profiles and progress data from local storage
 3. WHEN data files are corrupted or missing, THE NutriFit System SHALL handle errors gracefully and allow the user to reinitialize their profile
 4. WHEN user data is written, THE NutriFit System SHALL ensure data integrity by validating the structure before persisting to disk
+
+
+### Requirement 13
+
+**User Story:** As a user, I want to interact with an AI chatbot using natural language, so that I can easily create and modify meal plans and workouts through conversation.
+
+#### Acceptance Criteria
+
+1. WHEN a user sends a message to the chatbot, THE NutriFit System SHALL detect the user's intent (meal plan request, workout request, modification, question, or general conversation)
+2. WHEN a user requests a meal plan through chat, THE NutriFit System SHALL generate a personalized meal plan based on the user's profile and respond with a preview
+3. WHEN a user requests a workout plan through chat, THE NutriFit System SHALL generate a personalized workout plan based on the user's profile and respond with a weekly schedule
+4. WHEN a user asks to modify a meal or workout, THE NutriFit System SHALL provide alternative suggestions that match the user's preferences
+5. WHEN a user asks a nutrition or fitness question, THE NutriFit System SHALL provide an informative and helpful response using the LLM engine or template-based fallback
+6. WHEN a user provides profile information through chat, THE NutriFit System SHALL extract and update the user's dietary preferences, fitness goals, and restrictions
+7. WHEN a user sends a greeting or general message, THE NutriFit System SHALL respond conversationally and offer assistance
+8. WHEN the chatbot generates a response, THE NutriFit System SHALL maintain conversation history for context-aware interactions
+9. WHEN a user requests to reset the conversation, THE NutriFit System SHALL clear the conversation history and context
+10. WHEN the chatbot creates a meal or workout plan, THE NutriFit System SHALL store the plan in the current context for future modifications

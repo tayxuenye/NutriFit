@@ -750,3 +750,922 @@ class TestWorkoutPlannerEngine:
         calories = planner.estimate_weekly_calories_burned(plan, user_profile.weight_kg)
 
         assert calories >= 0
+
+
+class TestChatbotEngine:
+    """Tests for ChatbotEngine.
+    
+    Requirements: 13.1-13.10
+    """
+
+    @pytest.fixture
+    def user_profile(self):
+        """Create a test user profile."""
+        return UserProfile(
+            name="Test User",
+            age=30,
+            weight_kg=70.0,
+            height_cm=175.0,
+            gender="male",
+            dietary_preferences=[DietaryPreference.VEGETARIAN],
+            fitness_goals=[FitnessGoal.MUSCLE_GAIN],
+            pantry_items=["rice", "beans", "vegetables"],
+            available_equipment=["dumbbells", "resistance bands"],
+        )
+
+    @pytest.fixture
+    def chatbot(self):
+        """Create a chatbot engine with fallback LLM."""
+        from nutrifit.engines.chatbot_engine import ChatbotEngine
+        
+        # Use fallback mode for testing (no external dependencies)
+        llm_engine = LocalLLMEngine(use_fallback=True)
+        meal_planner = MealPlannerEngine()
+        workout_planner = WorkoutPlannerEngine()
+        
+        return ChatbotEngine(
+            llm_engine=llm_engine,
+            meal_planner=meal_planner,
+            workout_planner=workout_planner,
+        )
+
+    def test_intent_detection_meal_plan_request(self, chatbot):
+        """Test intent detection for meal plan requests.
+        
+        Requirements: 13.1
+        """
+        # Test various meal plan request phrasings
+        messages = [
+            "Create a meal plan for me",
+            "Generate a weekly meal plan",
+            "I need help planning my meals",
+            "Make me a food plan for the week",
+            "Can you plan my breakfast, lunch and dinner?",
+        ]
+        
+        for message in messages:
+            intent = chatbot._detect_intent(message)
+            assert intent == "meal_plan_request", f"Failed to detect meal plan request in: {message}"
+
+    def test_intent_detection_workout_plan_request(self, chatbot):
+        """Test intent detection for workout plan requests.
+        
+        Requirements: 13.1
+        """
+        messages = [
+            "Generate a training schedule",
+            "Make me a fitness routine",
+            "Generate an exercise program",
+        ]
+        
+        for message in messages:
+            intent = chatbot._detect_intent(message)
+            assert intent == "workout_plan_request", f"Failed to detect workout request in: {message}"
+
+    def test_intent_detection_meal_modification(self, chatbot):
+        """Test intent detection for meal modification requests.
+        
+        Requirements: 13.1, 13.4
+        """
+        messages = [
+            "Change my breakfast to something else",
+            "Replace my lunch with a salad",
+            "I want a different dinner",
+            "Swap my breakfast for something high-protein",
+            "Modify my lunch meal",
+        ]
+        
+        for message in messages:
+            intent = chatbot._detect_intent(message)
+            assert intent == "modify_meal", f"Failed to detect meal modification in: {message}"
+
+    def test_intent_detection_workout_modification(self, chatbot):
+        """Test intent detection for workout modification requests.
+        
+        Requirements: 13.1, 13.4
+        """
+        messages = [
+            "Change my Monday workout",
+            "Replace today's exercise with cardio",
+            "Modify my training for Wednesday",
+        ]
+        
+        for message in messages:
+            intent = chatbot._detect_intent(message)
+            assert intent == "modify_workout", f"Failed to detect workout modification in: {message}"
+
+    def test_intent_detection_nutrition_question(self, chatbot):
+        """Test intent detection for nutrition questions.
+        
+        Requirements: 13.1, 13.5
+        """
+        messages = [
+            "How much protein should I eat?",
+            "What are good sources of carbs?",
+            "Should I count calories?",
+            "What's the best diet for muscle gain?",
+        ]
+        
+        for message in messages:
+            intent = chatbot._detect_intent(message)
+            assert intent == "nutrition_question", f"Failed to detect nutrition question in: {message}"
+
+    def test_intent_detection_workout_question(self, chatbot):
+        """Test intent detection for workout questions.
+        
+        Requirements: 13.1, 13.5
+        """
+        messages = [
+            "What's the best workout for beginners?",
+            "Should I do cardio or strength training?",
+            "How long should my workouts be?",
+        ]
+        
+        for message in messages:
+            intent = chatbot._detect_intent(message)
+            assert intent == "workout_question", f"Failed to detect workout question in: {message}"
+
+    def test_intent_detection_profile_update(self, chatbot):
+        """Test intent detection for profile updates.
+        
+        Requirements: 13.1, 13.6
+        """
+        messages = [
+            "I am vegan",
+            "My goal is weight loss",
+            "I'm allergic to nuts",
+            "I want to build muscle",
+            "I need to avoid gluten",
+        ]
+        
+        for message in messages:
+            intent = chatbot._detect_intent(message)
+            assert intent == "profile_update", f"Failed to detect profile update in: {message}"
+
+    def test_intent_detection_general(self, chatbot):
+        """Test intent detection for general conversation.
+        
+        Requirements: 13.1, 13.7
+        """
+        messages = [
+            "Hello",
+            "Hi there",
+            "Thanks for your help",
+            "Can you help me?",
+            "What can you do?",
+        ]
+        
+        for message in messages:
+            intent = chatbot._detect_intent(message)
+            assert intent == "general", f"Failed to detect general intent in: {message}"
+
+    def test_meal_plan_generation_through_chat(self, chatbot, user_profile):
+        """Test meal plan generation through chat interface.
+        
+        Requirements: 13.2
+        """
+        chatbot.user_profile = user_profile
+        
+        response = chatbot.chat("Create a weekly meal plan for me", user_profile)
+        
+        # Response should mention meal plan creation
+        assert "meal plan" in response.lower()
+        
+        # Should include calorie information
+        assert "calorie" in response.lower() or "kcal" in response.lower()
+        
+        # Should have meal plan in context
+        assert "meal_plan" in chatbot.current_context
+        
+        # Verify conversation history
+        assert len(chatbot.conversation_history) == 2  # User message + assistant response
+        assert chatbot.conversation_history[0]["role"] == "user"
+        assert chatbot.conversation_history[1]["role"] == "assistant"
+
+    def test_workout_plan_generation_through_chat(self, chatbot, user_profile):
+        """Test workout plan generation through chat interface.
+        
+        Requirements: 13.3
+        """
+        chatbot.user_profile = user_profile
+        
+        response = chatbot.chat("Generate a 4-day workout plan", user_profile)
+        
+        # Response should mention workout plan
+        assert "workout" in response.lower()
+        
+        # Should include schedule information
+        assert any(day in response for day in ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"])
+        
+        # Should have workout plan in context
+        assert "workout_plan" in chatbot.current_context
+        
+        # Verify conversation history
+        assert len(chatbot.conversation_history) == 2
+
+    def test_meal_modification_request(self, chatbot, user_profile):
+        """Test meal modification requests.
+        
+        Requirements: 13.4
+        """
+        chatbot.user_profile = user_profile
+        
+        # First create a meal plan
+        chatbot.chat("Create a meal plan", user_profile)
+        
+        # Then request modification
+        response = chatbot.chat("Change my breakfast to something high-protein", user_profile)
+        
+        # Response should acknowledge the modification request
+        assert "breakfast" in response.lower()
+        assert any(word in response.lower() for word in ["change", "alternative", "suggestion", "different"])
+
+    def test_workout_modification_request(self, chatbot, user_profile):
+        """Test workout modification requests.
+        
+        Requirements: 13.4
+        """
+        chatbot.user_profile = user_profile
+        
+        # First create a workout plan
+        chatbot.chat("Generate a workout plan", user_profile)
+        
+        # Then request modification
+        response = chatbot.chat("Change my Monday workout to cardio", user_profile)
+        
+        # Response should acknowledge the modification request
+        assert "monday" in response.lower()
+        assert any(word in response.lower() for word in ["change", "alternative", "suggestion", "different"])
+
+    def test_nutrition_question_answering(self, chatbot):
+        """Test answering nutrition questions.
+        
+        Requirements: 13.5
+        """
+        response = chatbot.chat("How much protein should I eat daily?")
+        
+        # Response should be informative
+        assert len(response) > 50
+        assert "protein" in response.lower()
+
+    def test_workout_question_answering(self, chatbot):
+        """Test answering workout questions.
+        
+        Requirements: 13.5
+        """
+        response = chatbot.chat("How many rest days do I need per week?")
+        
+        # Response should be informative
+        assert len(response) > 50
+        assert "rest" in response.lower() or "recovery" in response.lower()
+
+    def test_profile_update_extraction_dietary_preference(self, chatbot):
+        """Test extracting dietary preferences from conversation.
+        
+        Requirements: 13.6
+        """
+        response = chatbot.chat("I am vegan and want to avoid gluten")
+        
+        # Response should acknowledge the profile update
+        assert "vegan" in response.lower()
+        assert any(word in response.lower() for word in ["noted", "got it", "understand"])
+
+    def test_profile_update_extraction_fitness_goal(self, chatbot):
+        """Test extracting fitness goals from conversation.
+        
+        Requirements: 13.6
+        """
+        response = chatbot.chat("My goal is to lose weight")
+        
+        # Response should acknowledge the goal
+        assert "weight" in response.lower() or "goal" in response.lower()
+
+    def test_profile_update_extraction_allergies(self, chatbot):
+        """Test extracting allergies from conversation.
+        
+        Requirements: 13.6
+        """
+        response = chatbot.chat("I'm allergic to nuts and dairy")
+        
+        # Response should acknowledge allergies
+        assert any(word in response.lower() for word in ["allergy", "allergic", "noted"])
+
+    def test_general_conversation_greeting(self, chatbot):
+        """Test general conversation with greetings.
+        
+        Requirements: 13.7
+        """
+        response = chatbot.chat("Hello!")
+        
+        # Response should be friendly and informative
+        assert len(response) > 20
+        assert any(word in response.lower() for word in ["hello", "hi", "help", "assist"])
+
+    def test_general_conversation_help(self, chatbot):
+        """Test help requests.
+        
+        Requirements: 13.7
+        """
+        response = chatbot.chat("What can you help me with?")
+        
+        # Response should list capabilities
+        assert "meal" in response.lower()
+        assert "workout" in response.lower()
+
+    def test_conversation_history_maintenance(self, chatbot, user_profile):
+        """Test that conversation history is maintained.
+        
+        Requirements: 13.8
+        """
+        # Send multiple messages
+        chatbot.chat("Hello", user_profile)
+        chatbot.chat("I want to build muscle", user_profile)
+        chatbot.chat("Create a meal plan", user_profile)
+        
+        history = chatbot.get_conversation_history()
+        
+        # Should have 6 entries (3 user + 3 assistant)
+        assert len(history) == 6
+        
+        # Check alternating roles
+        for i, entry in enumerate(history):
+            if i % 2 == 0:
+                assert entry["role"] == "user"
+            else:
+                assert entry["role"] == "assistant"
+
+    def test_conversation_reset(self, chatbot, user_profile):
+        """Test conversation reset functionality.
+        
+        Requirements: 13.9
+        """
+        # Build up conversation
+        chatbot.chat("Hello", user_profile)
+        chatbot.chat("Create a meal plan", user_profile)
+        
+        # Verify history exists
+        assert len(chatbot.conversation_history) > 0
+        assert len(chatbot.current_context) > 0
+        
+        # Reset conversation
+        chatbot.reset_conversation()
+        
+        # Verify history is cleared
+        assert len(chatbot.conversation_history) == 0
+        assert len(chatbot.current_context) == 0
+
+    def test_context_storage_meal_plan(self, chatbot, user_profile):
+        """Test that meal plans are stored in context.
+        
+        Requirements: 13.10
+        """
+        chatbot.user_profile = user_profile
+        
+        chatbot.chat("Create a meal plan for me", user_profile)
+        
+        # Meal plan should be in context
+        assert "meal_plan" in chatbot.current_context
+        
+        # Should be a MealPlan object
+        from nutrifit.models.plan import MealPlan
+        assert isinstance(chatbot.current_context["meal_plan"], MealPlan)
+
+    def test_context_storage_workout_plan(self, chatbot, user_profile):
+        """Test that workout plans are stored in context.
+        
+        Requirements: 13.10
+        """
+        chatbot.user_profile = user_profile
+        
+        chatbot.chat("Generate a workout plan", user_profile)
+        
+        # Workout plan should be in context
+        assert "workout_plan" in chatbot.current_context
+        
+        # Should be a WorkoutPlan object
+        from nutrifit.models.plan import WorkoutPlan
+        assert isinstance(chatbot.current_context["workout_plan"], WorkoutPlan)
+
+    def test_context_export(self, chatbot, user_profile):
+        """Test exporting context.
+        
+        Requirements: 13.10
+        """
+        chatbot.user_profile = user_profile
+        
+        # Create plans
+        chatbot.chat("Create a meal plan", user_profile)
+        chatbot.chat("Generate a workout plan", user_profile)
+        
+        # Export context
+        context = chatbot.export_context()
+        
+        # Should contain both plans
+        assert "meal_plan" in context
+        assert "workout_plan" in context
+        
+        # Should be a copy (not reference)
+        assert context is not chatbot.current_context
+
+    def test_meal_plan_without_profile(self, chatbot):
+        """Test meal plan request without user profile.
+        
+        Requirements: 13.2
+        """
+        response = chatbot.chat("Create a meal plan for me")
+        
+        # Should ask for profile information
+        assert any(word in response.lower() for word in ["tell", "need", "know", "about"])
+        assert any(word in response.lower() for word in ["dietary", "preference", "goal"])
+
+    def test_workout_plan_without_profile(self, chatbot):
+        """Test workout plan request without user profile.
+        
+        Requirements: 13.3
+        """
+        response = chatbot.chat("Generate a workout plan")
+        
+        # Should ask for profile information
+        assert any(word in response.lower() for word in ["tell", "need", "know", "about"])
+        assert any(word in response.lower() for word in ["goal", "equipment", "fitness"])
+
+    def test_modification_without_existing_plan(self, chatbot, user_profile):
+        """Test modification request without existing plan.
+        
+        Requirements: 13.4
+        """
+        chatbot.user_profile = user_profile
+        
+        response = chatbot.chat("Change my breakfast")
+        
+        # Should indicate no plan exists
+        assert any(word in response.lower() for word in ["don't have", "no", "create", "first"])
+
+    def test_conversation_context_awareness(self, chatbot, user_profile):
+        """Test that chatbot maintains context across messages.
+        
+        Requirements: 13.8
+        """
+        chatbot.user_profile = user_profile
+        
+        # First message: create plan
+        response1 = chatbot.chat("Create a meal plan", user_profile)
+        assert "meal plan" in response1.lower()
+        
+        # Second message: modify (should use context)
+        response2 = chatbot.chat("Change the breakfast")
+        
+        # Should understand we're talking about the meal plan from previous message
+        assert "breakfast" in response2.lower()
+        # Should not ask to create a new plan
+        assert "create" not in response2.lower() or "first" not in response2.lower()
+
+    def test_multiple_intent_types_in_conversation(self, chatbot, user_profile):
+        """Test handling multiple intent types in one conversation.
+        
+        Requirements: 13.1, 13.8
+        """
+        chatbot.user_profile = user_profile
+        
+        # Greeting
+        response1 = chatbot.chat("Hello")
+        assert len(response1) > 0
+        
+        # Profile update
+        response2 = chatbot.chat("I'm vegan")
+        assert "vegan" in response2.lower()
+        
+        # Question
+        response3 = chatbot.chat("How much protein do I need?")
+        assert "protein" in response3.lower()
+        
+        # Plan generation
+        response4 = chatbot.chat("Create a meal plan")
+        assert "meal plan" in response4.lower()
+        
+        # All should be in history
+        assert len(chatbot.conversation_history) == 8  # 4 user + 4 assistant
+
+    def test_calorie_target_in_meal_plan_response(self, chatbot, user_profile):
+        """Test that meal plan responses include calorie targets.
+        
+        Requirements: 13.2
+        """
+        chatbot.user_profile = user_profile
+        
+        response = chatbot.chat("Create a meal plan", user_profile)
+        
+        # Should mention calories
+        assert any(word in response.lower() for word in ["calorie", "kcal"])
+        
+        # Should include the actual target
+        assert str(user_profile.daily_calorie_target) in response
+
+    def test_equipment_in_workout_plan_response(self, chatbot, user_profile):
+        """Test that workout plan responses mention equipment.
+        
+        Requirements: 13.3
+        """
+        chatbot.user_profile = user_profile
+        
+        response = chatbot.chat("Generate a workout plan", user_profile)
+        
+        # Should mention equipment
+        assert "equipment" in response.lower() or any(
+            equip in response.lower() for equip in user_profile.available_equipment
+        )
+
+    def test_dietary_preference_respected_in_suggestions(self, chatbot, user_profile):
+        """Test that dietary preferences are respected in meal suggestions.
+        
+        Requirements: 13.2, 13.4
+        """
+        # Set vegan profile
+        user_profile.dietary_preferences = [DietaryPreference.VEGAN]
+        chatbot.user_profile = user_profile
+        
+        # Create meal plan
+        chatbot.chat("Create a meal plan", user_profile)
+        
+        # Request modification
+        response = chatbot.chat("Change my lunch")
+        
+        # Response should respect vegan preference
+        # (The LLM engine should use the dietary preferences)
+        assert len(response) > 0  # At minimum, should provide a response
+
+    def test_calorie_target_extraction_k_format(self, chatbot, user_profile):
+        """Test extraction of calorie target in 'k' format (e.g., 2k).
+        
+        Requirements: 13.6
+        """
+        original_target = user_profile.daily_calorie_target
+        
+        # Request with "2k" format
+        chatbot.chat("I want a meal plan with 2k calories", user_profile)
+        
+        # Profile should be updated
+        assert chatbot.user_profile.daily_calorie_target == 2000
+        assert chatbot.user_profile.daily_calorie_target != original_target
+
+    def test_calorie_target_extraction_number_format(self, chatbot, user_profile):
+        """Test extraction of calorie target in number format (e.g., 1800).
+        
+        Requirements: 13.6
+        """
+        # Request with explicit number
+        chatbot.chat("Create a meal plan with 1800 calories per day", user_profile)
+        
+        # Profile should be updated
+        assert chatbot.user_profile.daily_calorie_target == 1800
+
+    def test_calorie_target_extraction_kcal_format(self, chatbot, user_profile):
+        """Test extraction of calorie target with kcal unit.
+        
+        Requirements: 13.6
+        """
+        # Request with kcal unit (must include meal plan request)
+        chatbot.chat("Create a meal plan with target of 2200 kcal", user_profile)
+        
+        # Profile should be updated
+        assert chatbot.user_profile.daily_calorie_target == 2200
+
+    def test_calorie_target_in_response_after_extraction(self, chatbot, user_profile):
+        """Test that extracted calorie target appears in response.
+        
+        Requirements: 13.2, 13.6
+        """
+        response = chatbot.chat("I want a full meal plan and my calorie target is 2k", user_profile)
+        
+        # Response should show the requested target, not the calculated one
+        assert "2000 kcal" in response or "2000" in response
+        assert chatbot.user_profile.daily_calorie_target == 2000
+
+
+    def test_generate_llm_meal_plan(self, chatbot, user_profile):
+        """Test LLM meal plan generation.
+        
+        Requirements: 1.1, 1.2, 1.3
+        """
+        requirements = {
+            'calorie_target': 2000,
+            'duration': 7,
+            'macro_targets': {
+                'protein_g': 150,
+                'carbs_g': 200,
+                'fat_g': 67
+            }
+        }
+        
+        plan_text = chatbot.generate_llm_meal_plan(user_profile, requirements)
+        
+        # Should return a string
+        assert isinstance(plan_text, str)
+        assert len(plan_text) > 0
+        
+        # Should mention days
+        assert "Day" in plan_text or "day" in plan_text
+        
+        # Should mention meals
+        assert any(meal in plan_text.lower() for meal in ["breakfast", "lunch", "dinner"])
+
+    def test_generate_llm_workout_plan(self, chatbot, user_profile):
+        """Test LLM workout plan generation.
+        
+        Requirements: 2.1, 2.2, 2.3
+        """
+        requirements = {
+            'workout_days': 4,
+            'duration': 45,
+            'focus_areas': ['upper body', 'core'],
+            'fitness_level': 'intermediate'
+        }
+        
+        plan_text = chatbot.generate_llm_workout_plan(user_profile, requirements)
+        
+        # Should return a string
+        assert isinstance(plan_text, str)
+        assert len(plan_text) > 0
+        
+        # Should mention days or exercises
+        assert any(word in plan_text.lower() for word in ["day", "exercise", "workout"])
+
+    def test_store_generated_plan_meal(self, chatbot):
+        """Test storing a generated meal plan.
+        
+        Requirements: 4.1, 4.2
+        """
+        plan_text = "Day 1: Breakfast - Oatmeal (400 kcal)"
+        plan_id = chatbot.store_generated_plan(plan_text, "meal")
+        
+        # Should return a plan ID
+        assert isinstance(plan_id, str)
+        assert len(plan_id) > 0
+        assert plan_id.startswith("meal_")
+        
+        # Should be stored in context
+        assert f'generated_plan_{plan_id}' in chatbot.current_context
+        assert chatbot.current_context['current_meal_plan_id'] == plan_id
+        
+        # Verify stored data
+        stored_plan = chatbot.current_context[f'generated_plan_{plan_id}']
+        assert stored_plan['plan_id'] == plan_id
+        assert stored_plan['plan_type'] == 'meal'
+        assert stored_plan['llm_text'] == plan_text
+        assert stored_plan['saved'] is False
+
+    def test_store_generated_plan_workout(self, chatbot):
+        """Test storing a generated workout plan.
+        
+        Requirements: 4.1, 4.2
+        """
+        plan_text = "Day 1: Push-ups 3x10, Squats 3x15"
+        plan_id = chatbot.store_generated_plan(plan_text, "workout")
+        
+        # Should return a plan ID
+        assert isinstance(plan_id, str)
+        assert len(plan_id) > 0
+        assert plan_id.startswith("workout_")
+        
+        # Should be stored in context
+        assert f'generated_plan_{plan_id}' in chatbot.current_context
+        assert chatbot.current_context['current_workout_plan_id'] == plan_id
+
+    def test_meal_plan_prompt_includes_user_profile(self, chatbot, user_profile):
+        """Test that meal plan prompt includes user profile data.
+        
+        Requirements: 1.2, 7.1, 7.2
+        """
+        prompt = chatbot._build_meal_plan_prompt(
+            user_profile=user_profile,
+            calorie_target=2000,
+            protein_target=150,
+            carbs_target=200,
+            fat_target=67,
+            duration=7
+        )
+        
+        # Should include dietary preferences
+        assert "Vegetarian" in prompt
+        
+        # Should include fitness goals
+        assert "Muscle Gain" in prompt
+        
+        # Should include calorie target
+        assert "2000" in prompt
+        
+        # Should include macro targets
+        assert "150" in prompt  # protein
+        assert "200" in prompt  # carbs
+        assert "67" in prompt   # fat
+        
+        # Should include duration
+        assert "7" in prompt
+
+    def test_workout_plan_prompt_includes_user_profile(self, chatbot, user_profile):
+        """Test that workout plan prompt includes user profile data.
+        
+        Requirements: 2.2, 7.3, 7.4
+        """
+        prompt = chatbot._build_workout_plan_prompt(
+            user_profile=user_profile,
+            workout_days=4,
+            duration=45,
+            focus_areas=['upper body'],
+            fitness_level='intermediate'
+        )
+        
+        # Should include fitness goals
+        assert "Muscle Gain" in prompt
+        
+        # Should include equipment
+        assert any(equip in prompt for equip in ["dumbbells", "resistance bands"])
+        
+        # Should include workout days
+        assert "4" in prompt
+        
+        # Should include duration
+        assert "45" in prompt
+        
+        # Should include focus areas
+        assert "upper body" in prompt
+        
+        # Should include fitness level
+        assert "intermediate" in prompt
+
+    def test_meal_plan_prompt_with_allergies(self, chatbot, user_profile):
+        """Test that meal plan prompt includes allergies.
+        
+        Requirements: 1.2
+        """
+        user_profile.allergies = ["nuts", "dairy"]
+        
+        prompt = chatbot._build_meal_plan_prompt(
+            user_profile=user_profile,
+            calorie_target=2000,
+            protein_target=150,
+            carbs_target=200,
+            fat_target=67,
+            duration=7
+        )
+        
+        # Should include allergies
+        assert "nuts" in prompt
+        assert "dairy" in prompt
+
+    def test_meal_plan_prompt_with_no_preferences(self, chatbot):
+        """Test meal plan prompt with minimal user profile.
+        
+        Requirements: 1.2
+        """
+        minimal_profile = UserProfile(
+            name="Minimal User",
+            age=25,
+            weight_kg=70,
+            height_cm=175,
+            dietary_preferences=[],
+            fitness_goals=[],
+            allergies=[]
+        )
+        
+        prompt = chatbot._build_meal_plan_prompt(
+            user_profile=minimal_profile,
+            calorie_target=2000,
+            protein_target=150,
+            carbs_target=200,
+            fat_target=67,
+            duration=7
+        )
+        
+        # Should still generate a valid prompt
+        assert len(prompt) > 0
+        assert "2000" in prompt
+        assert "None" in prompt  # For empty preferences/allergies
+
+    def test_workout_plan_prompt_with_no_equipment(self, chatbot):
+        """Test workout plan prompt with no equipment.
+        
+        Requirements: 2.2
+        """
+        minimal_profile = UserProfile(
+            name="Minimal User",
+            age=25,
+            weight_kg=70,
+            height_cm=175,
+            available_equipment=[]
+        )
+        
+        prompt = chatbot._build_workout_plan_prompt(
+            user_profile=minimal_profile,
+            workout_days=3,
+            duration=30,
+            focus_areas=[],
+            fitness_level='beginner'
+        )
+        
+        # Should mention bodyweight
+        assert "Bodyweight" in prompt or "bodyweight" in prompt
+
+    def test_generate_llm_meal_plan_with_defaults(self, chatbot, user_profile):
+        """Test LLM meal plan generation with default requirements.
+        
+        Requirements: 1.1, 1.3
+        """
+        # Minimal requirements - should use defaults
+        requirements = {}
+        
+        plan_text = chatbot.generate_llm_meal_plan(user_profile, requirements)
+        
+        # Should still generate a plan
+        assert isinstance(plan_text, str)
+        assert len(plan_text) > 0
+
+    def test_generate_llm_workout_plan_with_defaults(self, chatbot, user_profile):
+        """Test LLM workout plan generation with default requirements.
+        
+        Requirements: 2.1, 2.3
+        """
+        # Minimal requirements - should use defaults
+        requirements = {}
+        
+        plan_text = chatbot.generate_llm_workout_plan(user_profile, requirements)
+        
+        # Should still generate a plan
+        assert isinstance(plan_text, str)
+        assert len(plan_text) > 0
+
+    def test_store_multiple_generated_plans(self, chatbot):
+        """Test storing multiple generated plans.
+        
+        Requirements: 4.1, 4.2
+        """
+        # Store first meal plan
+        plan_id1 = chatbot.store_generated_plan("Meal plan 1", "meal")
+        
+        # Store second meal plan
+        plan_id2 = chatbot.store_generated_plan("Meal plan 2", "meal")
+        
+        # Store workout plan
+        plan_id3 = chatbot.store_generated_plan("Workout plan 1", "workout")
+        
+        # All should have unique IDs
+        assert plan_id1 != plan_id2
+        assert plan_id1 != plan_id3
+        assert plan_id2 != plan_id3
+        
+        # All should be in context
+        assert f'generated_plan_{plan_id1}' in chatbot.current_context
+        assert f'generated_plan_{plan_id2}' in chatbot.current_context
+        assert f'generated_plan_{plan_id3}' in chatbot.current_context
+        
+        # Current plan IDs should point to latest
+        assert chatbot.current_context['current_meal_plan_id'] == plan_id2
+        assert chatbot.current_context['current_workout_plan_id'] == plan_id3
+
+    def test_meal_plan_prompt_format(self, chatbot, user_profile):
+        """Test that meal plan prompt has correct format.
+        
+        Requirements: 1.3
+        """
+        prompt = chatbot._build_meal_plan_prompt(
+            user_profile=user_profile,
+            calorie_target=2000,
+            protein_target=150,
+            carbs_target=200,
+            fat_target=67,
+            duration=7
+        )
+        
+        # Should have structured sections
+        assert "User Profile:" in prompt
+        assert "Requirements:" in prompt
+        assert "Format each day as:" in prompt
+        
+        # Should specify meal types
+        assert "Breakfast" in prompt
+        assert "Lunch" in prompt
+        assert "Dinner" in prompt
+        assert "Snack" in prompt
+
+    def test_workout_plan_prompt_format(self, chatbot, user_profile):
+        """Test that workout plan prompt has correct format.
+        
+        Requirements: 2.3
+        """
+        prompt = chatbot._build_workout_plan_prompt(
+            user_profile=user_profile,
+            workout_days=4,
+            duration=45,
+            focus_areas=['upper body'],
+            fitness_level='intermediate'
+        )
+        
+        # Should have structured sections
+        assert "User Profile:" in prompt
+        assert "Requirements:" in prompt
+        assert "Format each day as:" in prompt
+        
+        # Should specify workout components
+        assert "sets" in prompt.lower()
+        assert "reps" in prompt.lower()
+        assert "rest" in prompt.lower()

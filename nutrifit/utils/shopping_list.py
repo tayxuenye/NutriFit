@@ -112,6 +112,11 @@ class ShoppingListOptimizer:
         "tofu": "proteins",
         "eggs": "proteins",
         "fish": "proteins",
+        "steak": "proteins",
+        "lamb": "proteins",
+        "shrimp": "proteins",
+        "bacon": "proteins",
+        "sausage": "proteins",
         # Dairy
         "milk": "dairy",
         "cheese": "dairy",
@@ -142,6 +147,19 @@ class ShoppingListOptimizer:
         "sweet potato": "produce",
         "asparagus": "produce",
         "mushroom": "produce",
+        "greens": "produce",
+        "kale": "produce",
+        "cabbage": "produce",
+        "cauliflower": "produce",
+        "eggplant": "produce",
+        "ginger": "produce",
+        "parsley": "produce",
+        "cilantro": "produce",
+        "basil": "produce",
+        "mint": "produce",
+        "rosemary": "produce",
+        "thyme": "produce",
+        "olives": "produce",
         # Grains
         "rice": "grains",
         "bread": "grains",
@@ -169,23 +187,24 @@ class ShoppingListOptimizer:
         "basil": "pantry",
         "dill": "pantry",
         "ginger": "pantry",
-        # Legumes/Canned
-        "chickpeas": "legumes",
-        "lentils": "legumes",
-        "beans": "legumes",
+        # Vegetables (legumes)
+        "chickpeas": "vegetables",
+        "lentils": "vegetables",
+        "beans": "vegetables",
+        "hummus": "vegetables",
         "coconut milk": "canned",
         "diced tomatoes": "canned",
         "tomato paste": "canned",
         "broth": "canned",
         # Nuts/Seeds
-        "almonds": "nuts_seeds",
-        "walnuts": "nuts_seeds",
-        "peanut butter": "nuts_seeds",
-        "almond butter": "nuts_seeds",
-        "tahini": "nuts_seeds",
-        "chia seeds": "nuts_seeds",
-        "pine nuts": "nuts_seeds",
-        "coconut flakes": "nuts_seeds",
+        "almonds": "Nuts/Seeds",
+        "walnuts": "Nuts/Seeds",
+        "peanut butter": "Nuts/Seeds",
+        "almond butter": "Nuts/Seeds",
+        "tahini": "Nuts/Seeds",
+        "chia seeds": "Nuts/Seeds",
+        "pine nuts": "Nuts/Seeds",
+        "coconut flakes": "Nuts/Seeds",
         # Frozen
         "frozen berries": "frozen",
         "frozen vegetables": "frozen",
@@ -274,9 +293,43 @@ class ShoppingListOptimizer:
 
         # Collect all ingredients
         items: list[ShoppingItem] = []
+        
+        # Items to skip (generic placeholders and meal names used as ingredients)
+        skip_patterns = [
+            "various ingredients",
+            "as described",
+            "mixed ingredients",
+        ]
+        
+        # Patterns that indicate this is a meal name, not an ingredient
+        meal_name_patterns = [
+            " bowl",
+            " salad",
+            " wrap",
+            " sandwich",
+            " smoothie",
+            " shake",
+            " parfait",
+            " omelette",
+            " omelet",
+            " stir fry",
+            " stir-fry",
+            " curry",
+            " soup",
+            " stew",
+        ]
 
         for recipe in recipes:
             for ingredient in recipe.ingredients:
+                # Skip generic placeholder ingredients
+                ing_lower = ingredient.name.lower()
+                if any(pattern in ing_lower for pattern in skip_patterns):
+                    continue
+                
+                # Skip items that look like meal names (not actual ingredients)
+                if any(pattern in ing_lower for pattern in meal_name_patterns):
+                    continue
+                
                 item = ShoppingItem(
                     name=ingredient.name,
                     quantity=ingredient.quantity,
@@ -315,8 +368,11 @@ class ShoppingListOptimizer:
         Returns:
             Consolidated shopping list
         """
-        recipes = meal_plan.get_all_recipes()
-        return self.generate_from_recipes(recipes, pantry_items)
+        # Get all recipes including duplicates for proper quantity calculation
+        all_recipes = []
+        for daily_plan in meal_plan.daily_plans:
+            all_recipes.extend(daily_plan.get_all_recipes())
+        return self.generate_from_recipes(all_recipes, pantry_items)
 
     def _consolidate_items(
         self, items: list[ShoppingItem]

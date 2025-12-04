@@ -733,3 +733,330 @@ Integration tests will verify end-to-end workflows:
 - [ ] Test CLI commands and help text
 - [ ] Verify data persistence across sessions
 - [ ] Test error handling for invalid inputs and corrupted data
+
+
+## Chatbot Engine
+
+### Overview
+
+The Chatbot Engine provides a conversational AI interface that allows users to interact with NutriFit using natural language. It integrates with the Meal Planner, Workout Planner, and LLM Engine to provide an intuitive, chat-based experience for creating and modifying plans.
+
+### Architecture
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                    User (Web Interface)                      │
+└────────────────────────┬────────────────────────────────────┘
+                         │
+                         ▼
+┌─────────────────────────────────────────────────────────────┐
+│                    Chatbot Engine                            │
+│  ┌──────────────────────────────────────────────────────┐  │
+│  │  Intent Detection                                     │  │
+│  │  - Meal plan requests                                 │  │
+│  │  - Workout plan requests                              │  │
+│  │  - Modifications                                      │  │
+│  │  - Questions (nutrition/fitness)                      │  │
+│  │  - Profile updates                                    │  │
+│  └──────────────────────────────────────────────────────┘  │
+│  ┌──────────────────────────────────────────────────────┐  │
+│  │  Conversation State                                   │  │
+│  │  - History (user/assistant messages)                  │  │
+│  │  - Context (current meal/workout plans)               │  │
+│  │  - User profile                                       │  │
+│  └──────────────────────────────────────────────────────┘  │
+└────────────┬──────────────┬──────────────┬─────────────────┘
+             │              │              │
+             ▼              ▼              ▼
+    ┌────────────┐  ┌────────────┐  ┌────────────┐
+    │   Meal     │  │  Workout   │  │    LLM     │
+    │  Planner   │  │  Planner   │  │   Engine   │
+    └────────────┘  └────────────┘  └────────────┘
+```
+
+### Component Interface
+
+#### ChatbotEngine Class
+
+```python
+class ChatbotEngine:
+    """Conversational AI chatbot for personalized nutrition and workout planning."""
+    
+    def __init__(
+        self,
+        llm_engine: LocalLLMEngine | None = None,
+        meal_planner: MealPlannerEngine | None = None,
+        workout_planner: WorkoutPlannerEngine | None = None,
+    )
+    
+    def chat(
+        self,
+        user_message: str,
+        user_profile: UserProfile | None = None
+    ) -> str
+    
+    def reset_conversation() -> None
+    def get_conversation_history() -> list[dict[str, str]]
+    def export_context() -> dict[str, Any]
+```
+
+### Intent Detection
+
+The chatbot uses keyword-based intent detection to classify user messages:
+
+**Intent Types:**
+1. **meal_plan_request**: User wants to create a meal plan
+   - Keywords: "meal plan", "food", "recipe", "eat" + "create", "generate", "make"
+   
+2. **workout_plan_request**: User wants to create a workout plan
+   - Keywords: "workout", "exercise", "training" + "create", "generate", "make"
+   
+3. **modify_meal**: User wants to change a meal
+   - Keywords: "change", "modify", "replace", "swap" + meal keywords
+   
+4. **modify_workout**: User wants to change a workout
+   - Keywords: "change", "modify", "replace", "swap" + workout keywords
+   
+5. **nutrition_question**: User has a nutrition question
+   - Keywords: "what", "how", "why" + "calorie", "protein", "carb", "nutrition"
+   
+6. **workout_question**: User has a fitness question
+   - Keywords: "what", "how", "why" + "workout", "exercise", "training"
+   
+7. **profile_update**: User is providing profile information
+   - Keywords: "i am", "i'm", "my goal", "i want", "allergic"
+   
+8. **general**: General conversation or greeting
+
+### Response Generation
+
+#### Meal Plan Request Flow:
+1. Check if user profile exists
+2. If no profile: Request profile information
+3. If profile exists: Generate meal plan using MealPlannerEngine
+4. Store plan in context
+5. Return formatted response with:
+   - Daily calorie targets
+   - Macro breakdown
+   - Day 1 preview
+   - Offer to show more or modify
+
+#### Workout Plan Request Flow:
+1. Check if user profile exists
+2. If no profile: Request profile information
+3. If profile exists: Generate workout plan using WorkoutPlannerEngine
+4. Store plan in context
+5. Return formatted response with:
+   - Weekly schedule
+   - Workout days per week
+   - Equipment used
+   - Offer to show details or modify
+
+#### Modification Flow:
+1. Check if plan exists in context
+2. If no plan: Offer to create one
+3. If plan exists: Use LLM to generate alternative suggestion
+4. Return suggestion with option to apply
+
+#### Question Flow:
+1. Use LLM to generate response (if available)
+2. Fall back to template-based responses
+3. Personalize based on user profile if available
+
+### Conversation State
+
+The chatbot maintains state across messages:
+
+```python
+{
+    "conversation_history": [
+        {"role": "user", "content": "Create a meal plan"},
+        {"role": "assistant", "content": "Great! I've created..."}
+    ],
+    "current_context": {
+        "meal_plan": MealPlan(...),
+        "workout_plan": WorkoutPlan(...)
+    },
+    "user_profile": UserProfile(...)
+}
+```
+
+### API Endpoints
+
+#### POST /api/chatbot/chat
+Send a message and receive a response.
+
+**Request:**
+```json
+{
+    "message": "Create a weekly meal plan for me",
+    "user_id": "default"
+}
+```
+
+**Response:**
+```json
+{
+    "response": "Great! I've created a 7-day meal plan for you!...",
+    "conversation_id": "default"
+}
+```
+
+#### GET /api/chatbot/history
+Get conversation history.
+
+**Response:**
+```json
+{
+    "history": [
+        {"role": "user", "content": "Hello"},
+        {"role": "assistant", "content": "Hi there!"}
+    ]
+}
+```
+
+#### POST /api/chatbot/reset
+Reset conversation.
+
+**Response:**
+```json
+{
+    "message": "Conversation reset successfully"
+}
+```
+
+#### GET /api/chatbot/context
+Get current context (plans, etc.).
+
+**Response:**
+```json
+{
+    "context": {
+        "meal_plan": {...},
+        "workout_plan": {...}
+    }
+}
+```
+
+### Web Interface
+
+The chatbot is accessible through a dedicated tab in the web interface:
+
+**Features:**
+- Chat message display (user/assistant bubbles)
+- Text input with send button
+- Quick action buttons for common requests
+- Typing indicator during response generation
+- Markdown formatting support
+- Auto-scroll to latest message
+
+**UI Components:**
+- `#chatMessages`: Scrollable message container
+- `#chatForm`: Message input form
+- `#chatInput`: Text input field
+- Quick action buttons for common tasks
+
+### Example Conversations
+
+#### Example 1: Creating a Meal Plan
+```
+User: "Create a weekly meal plan for me"
+
+B
+ot: "Great! I've created a 7-day meal plan for you!
+
+📊 **Your Daily Targets:**
+- Calories: 2100 kcal
+- Protein: 157g
+- Carbs: 210g
+- Fat: 70g
+
+**Day 1 Preview (2024-12-02):**
+🍳 Breakfast: Greek Yogurt Parfait (350 kcal)
+🥗 Lunch: Grilled Chicken Salad (450 kcal)
+🍽️ Dinner: Salmon with Quinoa (550 kcal)
+
+Total: 1350 kcal
+
+Would you like to see the full plan, or would you like me to change anything?"
+```
+
+#### Example 2: Modifying a Meal
+```
+User: "Change my breakfast to something high-protein"
+
+Bot: "I can help you change your breakfast! Here's an alternative suggestion:
+
+Try a protein-rich scramble or smoothie using eggs, Greek yogurt, and protein powder. This balanced meal provides sustained energy for your morning.
+
+Would you like me to update your plan with this, or would you like a different suggestion?"
+```
+
+#### Example 3: Nutrition Question
+```
+User: "How much protein do I need?"
+
+Bot: "Based on your profile, you should aim for approximately 157g of protein per day. This is calculated for your muscle gain goal.
+
+Good protein sources include:
+- Lean meats (chicken, turkey, fish)
+- Eggs and dairy
+- Legumes (beans, lentils)
+- Tofu and tempeh
+- Nuts and seeds
+
+For muscle gain, aim for 1.6-2.2g per kg of body weight."
+```
+
+#### Example 4: Workout Plan Request
+```
+User: "Generate a 4-day workout plan"
+
+Bot: "Perfect! I've created a 4-day per week workout plan for you!
+
+🎯 **Your Goals:** muscle_gain
+🏋️ **Equipment:** dumbbells, resistance bands
+
+**Weekly Schedule:**
+Mon: 💪 Full Body Strength (45 min)
+Tue: 😴 Rest Day
+Wed: 💪 Upper Body Focus (50 min)
+Thu: 😴 Rest Day
+Fri: 💪 Lower Body Focus (45 min)
+Sat: 💪 HIIT Circuit (30 min)
+Sun: 😴 Rest Day
+
+Would you like details on any specific day, or would you like me to adjust anything?"
+```
+
+### Error Handling
+
+The chatbot handles various error scenarios gracefully:
+
+1. **No User Profile**: Requests profile information before generating plans
+2. **No Planners Available**: Provides information about what can be created
+3. **LLM Unavailable**: Falls back to template-based responses
+4. **Invalid Requests**: Asks clarifying questions
+5. **API Errors**: Returns user-friendly error messages
+
+### Benefits
+
+1. **Natural Interaction**: Users describe what they want in plain language
+2. **Lower Barrier to Entry**: No need to navigate complex forms
+3. **Contextual**: Remembers conversation and can refine plans iteratively
+4. **Educational**: Answers questions and provides explanations
+5. **Flexible**: Handles various phrasings and requests
+6. **Personalized**: Responses tailored to user profile and goals
+
+### Future Enhancements
+
+Potential improvements for the chatbot:
+
+1. **Voice Input**: Add speech-to-text for hands-free interaction
+2. **Image Support**: Allow users to upload food/exercise photos
+3. **Multi-turn Planning**: More sophisticated conversation flows
+4. **Sentiment Analysis**: Detect user satisfaction and adjust responses
+5. **Proactive Suggestions**: Chatbot initiates conversations based on user behavior
+6. **Chat History Persistence**: Save conversations across sessions
+7. **Multi-language Support**: Translate conversations to other languages
+8. **Integration with Calendar**: Schedule meals and workouts automatically

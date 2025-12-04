@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Save Button Test</title>
+    <style>
+        :root {
+            --primary: #6366f1;
+            --primary-dark: #4f46e5;
+            --primary-light: #a5b4fc;
+            --success: #10b981;
+            --error: #ef4444;
+            --warning: #f59e0b;
+            --bg: #f8fafc;
+            --surface: #ffffff;
+            --text-primary: #1e293b;
+            --text-secondary: #64748b;
+            --border: #e2e8f0;
+            --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+            --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+            --radius: 12px;
+            --radius-lg: 16px;
+            --spacing-xs: 4px;
+            --spacing-sm: 8px;
+            --spacing-md: 12px;
+            --spacing-lg: 16px;
+            --spacing-xl: 20px;
+            --spacing-2xl: 24px;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: var(--bg);
+            color: var(--text-primary);
+            padding: 40px;
+            line-height: 1.5;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background: var(--surface);
+            padding: var(--spacing-2xl);
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-lg);
+        }
+
+        h1 {
+            margin-bottom: var(--spacing-xl);
+            color: var(--text-primary);
+        }
+
+        .test-section {
+            margin-bottom: var(--spacing-2xl);
+            padding: var(--spacing-lg);
+            background: var(--bg);
+            border-radius: var(--radius);
+        }
+
+        .test-section h2 {
+            font-size: 1rem;
+            margin-bottom: var(--spacing-md);
+            color: var(--text-secondary);
+        }
+
+        /* Save Plan Button Styles */
+        .plan-save-actions {
+            display: flex;
+            gap: var(--spacing-md);
+            margin-top: var(--spacing-lg);
+            padding-top: var(--spacing-lg);
+            border-top: 2px solid var(--border);
+        }
+
+        .btn-save-plan {
+            flex: 1;
+            padding: var(--spacing-md) var(--spacing-lg);
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: white;
+            border: none;
+            border-radius: var(--radius);
+            font-size: 0.9375rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: var(--spacing-sm);
+        }
+
+        .btn-save-plan:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4);
+            background: linear-gradient(135deg, #059669 0%, #047857 100%);
+        }
+
+        .btn-save-plan:active {
+            transform: translateY(0);
+        }
+
+        .btn-save-plan.saving {
+            opacity: 0.7;
+            cursor: wait;
+            background: linear-gradient(135deg, #6b7280 0%, #4b5563 100%);
+        }
+
+        .btn-save-plan.saved {
+            background: linear-gradient(135deg, #6b7280 0%, #4b5563 100%);
+            cursor: not-allowed;
+            opacity: 0.8;
+        }
+
+        .btn-save-plan.saved:hover {
+            transform: none;
+            box-shadow: 0 2px 8px rgba(107, 114, 128, 0.3);
+        }
+
+        .btn-regenerate {
+            flex: 1;
+            padding: var(--spacing-md) var(--spacing-lg);
+            background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+            color: var(--text-primary);
+            border: 2px solid var(--border);
+            border-radius: var(--radius);
+            font-size: 0.9375rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: var(--spacing-sm);
+        }
+
+        .btn-regenerate:hover {
+            border-color: var(--primary);
+            background: linear-gradient(135deg, var(--primary-light) 0%, #e0e7ff 100%);
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
+        }
+
+        .btn-regenerate:active {
+            transform: translateY(0);
+        }
+
+        @media (max-width: 480px) {
+            .plan-save-actions {
+                flex-direction: column;
+            }
+
+            .btn-save-plan,
+            .btn-regenerate {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Save Button UI Component Test</h1>
+
+        <div class="test-section">
+            <h2>Default State</h2>
+            <div class="plan-save-actions">
+                <button class="btn-save-plan" onclick="testSaving(this)">
+                    💾 Save to Meal Plans
+                </button>
+                <button class="btn-regenerate" onclick="alert('Regenerate clicked!')">
+                    🔄 Regenerate
+                </button>
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h2>Saving State</h2>
+            <div class="plan-save-actions">
+                <button class="btn-save-plan saving" disabled>
+                    ⏳ Saving...
+                </button>
+                <button class="btn-regenerate">
+                    🔄 Regenerate
+                </button>
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h2>Saved State</h2>
+            <div class="plan-save-actions">
+                <button class="btn-save-plan saved" disabled>
+                    ✅ Saved!
+                </button>
+                <button class="btn-regenerate">
+                    🔄 Regenerate
+                </button>
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h2>Workout Plan Variant</h2>
+            <div class="plan-save-actions">
+                <button class="btn-save-plan" onclick="testSaving(this)">
+                    💾 Save to Workout Plans
+                </button>
+                <button class="btn-regenerate" onclick="alert('Regenerate clicked!')">
+                    🔄 Regenerate
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function testSaving(button) {
+            // Simulate saving process
+            button.classList.add('saving');
+            button.disabled = true;
+            const originalText = button.innerHTML;
+            button.innerHTML = '⏳ Saving...';
+
+            setTimeout(() => {
+                button.classList.remove('saving');
+                button.classList.add('saved');
+                button.innerHTML = '✅ Saved!';
+            }, 2000);
+        }
+    </script>
+</body>
+</html>

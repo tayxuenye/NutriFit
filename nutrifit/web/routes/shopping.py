@@ -10,6 +10,30 @@ from nutrifit.web import app, storage
 from nutrifit.web.utils import get_or_create_profile
 
 
+# Category display name mapping
+CATEGORY_DISPLAY_NAMES = {
+    "proteins": "Proteins",
+    "dairy": "Dairy",
+    "produce": "Produce",
+    "grains": "Grains",
+    "pantry": "Pantry",
+    "vegetables": "Vegetables",
+    "legumes": "Vegetables",  # Map legumes to vegetables
+    "Nuts/Seeds": "Nuts/Seeds",
+    "nuts_seeds": "Nuts/Seeds",
+    "canned": "Canned Goods",
+    "frozen": "Frozen",
+    "supplements": "Supplements",
+    "baking": "Baking",
+    "other": "Other",
+}
+
+
+def format_category_name(category: str) -> str:
+    """Format category name for display."""
+    return CATEGORY_DISPLAY_NAMES.get(category, category.replace("_", " ").title())
+
+
 @app.route("/api/shopping-list", methods=["POST", "OPTIONS"])
 def generate_shopping_list():
     """Generate shopping list from all meal plans, grouped by week."""
@@ -48,12 +72,13 @@ def generate_shopping_list():
             
             shopping_list = optimize_shopping_list(meal_plan, user=profile)
             
-            # Group items by category
+            # Group items by category with formatted names
             by_category = {}
             for item in shopping_list.items:
-                if item.category not in by_category:
-                    by_category[item.category] = []
-                by_category[item.category].append({
+                category = format_category_name(item.category)
+                if category not in by_category:
+                    by_category[category] = []
+                by_category[category].append({
                     "name": item.name,
                     "quantity": item.quantity,
                     "unit": item.unit,
@@ -111,10 +136,10 @@ def generate_shopping_list():
                     item_dict[key]["category"] = item.category
                     item_dict[key]["is_optional"] = item.is_optional
                 
-                # Group by category
+                # Group by category with formatted names
                 by_category = {}
                 for item_data in item_dict.values():
-                    category = item_data["category"]
+                    category = format_category_name(item_data["category"])
                     if category not in by_category:
                         by_category[category] = []
                     by_category[category].append({

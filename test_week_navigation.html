@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Week Navigation Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        .controls { margin: 20px 0; display: flex; gap: 10px; align-items: center; }
+        button { padding: 10px 20px; cursor: pointer; }
+        #display { font-weight: bold; font-size: 18px; }
+        #log { margin-top: 20px; padding: 10px; background: #f0f0f0; border-radius: 5px; }
+        .log-entry { margin: 5px 0; }
+    </style>
+</head>
+<body>
+    <h1>Week Navigation Test</h1>
+    
+    <div class="controls">
+        <button onclick="changeMealWeek(-1)">← Previous Week</button>
+        <div id="display"></div>
+        <button onclick="changeMealWeek(1)">Next Week →</button>
+    </div>
+    
+    <div>
+        <button onclick="resetWeek()">Reset to Current Week</button>
+        <button onclick="clearLog()">Clear Log</button>
+    </div>
+    
+    <div id="log">
+        <strong>Event Log:</strong>
+        <div id="logEntries"></div>
+    </div>
+
+    <script>
+        let currentMealWeek = 0;
+        
+        function log(message) {
+            const logEntries = document.getElementById('logEntries');
+            const entry = document.createElement('div');
+            entry.className = 'log-entry';
+            entry.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
+            logEntries.insertBefore(entry, logEntries.firstChild);
+        }
+        
+        function getWeekStartDate(weekOffset = 0) {
+            const now = new Date();
+            const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+            const dayOfWeek = today.getDay();
+            const daysToMonday = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
+            const monday = new Date(today);
+            monday.setDate(today.getDate() + daysToMonday + (weekOffset * 7));
+            return monday;
+        }
+        
+        function formatWeekDisplay(weekOffset) {
+            const monday = getWeekStartDate(weekOffset);
+            const sunday = new Date(monday);
+            sunday.setDate(monday.getDate() + 6);
+
+            const mondayStr = monday.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+            const sundayStr = sunday.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+
+            if (weekOffset === 0) {
+                return `This Week (${mondayStr} - ${sundayStr})`;
+            } else if (weekOffset === -1) {
+                return `Last Week (${mondayStr} - ${sundayStr})`;
+            } else if (weekOffset === 1) {
+                return `Next Week (${mondayStr} - ${sundayStr})`;
+            } else {
+                return `${mondayStr} - ${sundayStr}`;
+            }
+        }
+        
+        function updateDisplay() {
+            document.getElementById('display').textContent = formatWeekDisplay(currentMealWeek);
+            log(`Week updated: offset=${currentMealWeek}, display="${formatWeekDisplay(currentMealWeek)}"`);
+        }
+        
+        function changeMealWeek(delta) {
+            log(`changeMealWeek called with delta=${delta}`);
+            currentMealWeek += delta;
+            updateDisplay();
+        }
+        
+        function resetWeek() {
+            log('Reset to current week');
+            currentMealWeek = 0;
+            updateDisplay();
+        }
+        
+        function clearLog() {
+            document.getElementById('logEntries').innerHTML = '';
+        }
+        
+        // Initialize
+        updateDisplay();
+        log('Page loaded, initialized to current week');
+    </script>
+</body>
+</html>

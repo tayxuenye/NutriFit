@@ -127,6 +127,7 @@ class MealPlan:
     daily_plans: list[DailyMealPlan] = field(default_factory=list)
     target_calories_per_day: int = 2000
     notes: str = ""
+    source: str = "manual"  # "manual" or "ai_chat"
 
     @property
     def duration_days(self) -> int:
@@ -162,6 +163,7 @@ class MealPlan:
             "daily_plans": [dp.to_dict() for dp in self.daily_plans],
             "target_calories_per_day": self.target_calories_per_day,
             "notes": self.notes,
+            "source": self.source,
         }
 
     @classmethod
@@ -177,6 +179,7 @@ class MealPlan:
             ],
             target_calories_per_day=data.get("target_calories_per_day", 2000),
             notes=data.get("notes", ""),
+            source=data.get("source", "manual"),
         )
     
     def validate(self) -> None:
@@ -286,6 +289,7 @@ class WorkoutPlan:
     daily_plans: list[DailyWorkoutPlan] = field(default_factory=list)
     workout_days_per_week: int = 4
     notes: str = ""
+    source: str = "manual"  # "manual" or "ai_chat"
 
     @property
     def duration_days(self) -> int:
@@ -318,6 +322,7 @@ class WorkoutPlan:
             "daily_plans": [dp.to_dict() for dp in self.daily_plans],
             "workout_days_per_week": self.workout_days_per_week,
             "notes": self.notes,
+            "source": self.source,
         }
 
     @classmethod
@@ -333,6 +338,7 @@ class WorkoutPlan:
             ],
             workout_days_per_week=data.get("workout_days_per_week", 4),
             notes=data.get("notes", ""),
+            source=data.get("source", "manual"),
         )
     
     def validate(self) -> None:

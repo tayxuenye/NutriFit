@@ -1,40 +1,24 @@
 # Implementation Plan
 
 - [x] 1. Enhance data models with validation and serialization
-
-
-
-
-
   - Add validation methods to UserProfile for dietary preference compatibility
   - Implement complete serialization/deserialization for all models
   - Add helper methods for data integrity checks
   - _Requirements: 1.1, 1.3, 2.1, 4.1, 4.3, 12.1, 12.4_
 
 - [x] 1.1 Write property test for UserProfile persistence round-trip
-
-
   - **Property 1: Dietary Preference Persistence Round-Trip**
   - **Validates: Requirements 1.1, 1.3**
 
 - [x] 1.2 Write property test for data storage format validity
-
-
   - **Property 30: Data Storage Format Validity**
   - **Validates: Requirements 12.1**
 
 - [x] 1.3 Write property test for data structure validation
-
-
   - **Property 31: Data Structure Validation Before Persistence**
   - **Validates: Requirements 12.4**
 
 - [x] 2. Implement storage manager with error handling
-
-
-
-
-
   - Create StorageManager class with save/load methods for all data types
   - Implement error handling for file operations (not found, corrupted, permissions)
   - Add data validation before persistence
@@ -42,25 +26,16 @@
   - _Requirements: 12.1, 12.2, 12.3, 12.4_
 
 - [x] 2.1 Write property test for ingredient inventory persistence
-
-
   - **Property 6: Ingredient Inventory Persistence Round-Trip**
   - **Validates: Requirements 3.1**
 
 - [x] 2.2 Write unit tests for storage error handling
-
-
   - Test file not found scenarios
   - Test corrupted data handling
   - Test permission errors
   - _Requirements: 12.3_
 
 - [x] 3. Enhance embedding engine with caching and fallback
-
-
-
-
-
   - Verify embedding cache functionality
   - Ensure TF-IDF fallback works when transformers unavailable
   - Add batch embedding optimization
@@ -68,19 +43,12 @@
   - _Requirements: 9.1, 9.3_
 
 - [x] 3.1 Write unit tests for embedding engine
-
-
   - Test embedding generation and caching
   - Test similarity calculation
   - Test fallback mode
   - _Requirements: 9.1_
 
 - [x] 4. Enhance LLM engine with template improvements
-
-
-
-
-
   - Improve template-based suggestions for meals and workouts
   - Add more variety to template responses
   - Implement model loading with graceful fallback
@@ -88,174 +56,158 @@
   - _Requirements: 9.2, 9.3_
 
 - [x] 4.1 Write unit tests for LLM engine
-
-
   - Test template-based suggestions
   - Test model loading and fallback
   - Test status reporting
   - _Requirements: 9.2_
 
 - [x] 5. Implement caloric and macro-nutrient calculation logic
-
-
-
-
-
   - Add BMR calculation to UserProfile with fitness goal adjustments
   - Implement macro-nutrient ratio calculation based on fitness goals
   - Add validation for caloric targets
   - _Requirements: 2.2, 2.3_
 
 - [x] 5.1 Write property test for fitness goal caloric adjustment
-
-
   - **Property 3: Fitness Goal Caloric Adjustment**
   - **Validates: Requirements 2.2**
 
 - [x] 5.2 Write property test for macro-nutrient adjustment
-
-
   - **Property 4: Fitness Goal Macro-Nutrient Adjustment**
   - **Validates: Requirements 2.3**
-- [-] 6. Enhance meal planner with dietary filtering and scoring
 
-
-- [ ] 6. Enhance meal planner with dietary filtering and scoring
-
+- [x] 6. Enhance meal planner with dietary filtering and scoring
   - Improve dietary preference filtering logic
   - Enhance pantry ingredient scoring algorithm
   - Add allergy filtering
   - Implement calorie target matching with tolerance
   - _Requirements: 1.4, 3.2, 5.4_
 
-- [ ] 6.1 Write property test for meal plans respecting dietary preferences
-
-
+- [x] 6.1 Write property test for meal plans respecting dietary preferences
   - **Property 2: Meal Plans Respect Dietary Preferences**
   - **Validates: Requirements 1.4**
 
-- [ ] 6.2 Write property test for pantry ingredient prioritization
+- [x] 6.2 Write property test for pantry ingredient prioritization
   - **Property 7: Pantry Ingredient Prioritization**
   - **Validates: Requirements 3.2**
 
-- [ ] 6.3 Write property test for daily caloric target adherence
+- [x] 6.3 Write property test for daily caloric target adherence
   - **Property 12: Daily Caloric Target Adherence**
   - **Validates: Requirements 5.4**
 
-- [ ] 6.4 Write property test for macro-nutrient ratio adherence
+- [x] 6.4 Write property test for macro-nutrient ratio adherence
   - **Property 13: Macro-Nutrient Ratio Adherence**
   - **Validates: Requirements 5.5**
 
-- [ ] 7. Implement meal plan generation with duration control
+- [x] 7. Implement meal plan generation with duration control
   - Ensure daily plan generation creates exactly 1 day
   - Ensure weekly plan generation creates exactly 7 days
   - Add plan naming and metadata
   - Implement recipe variety (avoid repetition)
   - _Requirements: 5.1, 5.2, 5.3_
 
-- [ ] 7.1 Write property test for meal plan duration correctness
+- [x] 7.1 Write property test for meal plan duration correctness
   - **Property 11: Meal Plan Duration Correctness**
   - **Validates: Requirements 5.1**
 
-- [ ] 7.2 Write property test for meal plans aligning with fitness goals
+- [x] 7.2 Write property test for meal plans aligning with fitness goals
   - **Property 5: Meal Plans Align with Fitness Goals**
   - **Validates: Requirements 2.4**
 
-- [ ] 8. Enhance workout planner with equipment and difficulty filtering
+- [x] 8. Enhance workout planner with equipment and difficulty filtering
   - Improve equipment compatibility filtering
   - Add fitness level filtering (beginner/intermediate/advanced)
   - Implement duration constraint filtering
   - Add muscle group targeting based on fitness goals
   - _Requirements: 4.4, 6.3_
 
-- [ ] 8.1 Write property test for equipment compatibility
+- [x] 8.1 Write property test for equipment compatibility
   - **Property 10: Equipment Compatibility in Workout Plans**
   - **Validates: Requirements 4.4**
 
-- [ ] 8.2 Write property test for exercise fitness level and equipment match
+- [x] 8.2 Write property test for exercise fitness level and equipment match
   - **Property 15: Exercise Fitness Level and Equipment Match**
   - **Validates: Requirements 6.3**
 
-- [ ] 9. Implement workout plan generation with intensity balancing
+- [x] 9. Implement workout plan generation with intensity balancing
   - Ensure workout plan duration matches requested days
   - Implement weekly split (strength/cardio/rest rotation)
   - Add intensity balancing (no consecutive high-intensity days)
   - Ensure all exercises have complete data (duration, intensity, rest)
   - _Requirements: 6.1, 6.4, 6.5_
 
-- [ ] 9.1 Write property test for workout plan duration correctness
+- [x] 9.1 Write property test for workout plan duration correctness
   - **Property 14: Workout Plan Duration Correctness**
   - **Validates: Requirements 6.1**
 
-- [ ] 9.2 Write property test for exercise completeness
+- [x] 9.2 Write property test for exercise completeness
   - **Property 16: Exercise Completeness**
   - **Validates: Requirements 6.4**
 
-- [ ] 9.3 Write property test for workout intensity balance
+- [x] 9.3 Write property test for workout intensity balance
   - **Property 17: Workout Intensity Balance**
   - **Validates: Requirements 6.5**
 
-- [ ] 10. Implement shopping list optimizer
+- [x] 10. Implement shopping list optimizer
   - Extract all ingredients from meal plan
   - Filter out pantry items
   - Consolidate duplicate ingredients with quantity summing
   - Categorize ingredients by type
   - _Requirements: 7.1, 7.2, 7.3, 7.4_
 
-- [ ] 10.1 Write property test for shopping list ingredient completeness
+- [x] 10.1 Write property test for shopping list ingredient completeness
   - **Property 18: Shopping List Ingredient Completeness**
   - **Validates: Requirements 7.1**
 
-- [ ] 10.2 Write property test for shopping list pantry exclusion
+- [x] 10.2 Write property test for shopping list pantry exclusion
   - **Property 19: Shopping List Pantry Exclusion**
   - **Validates: Requirements 7.2**
 
-- [ ] 10.3 Write property test for ingredient consolidation
+- [x] 10.3 Write property test for ingredient consolidation
   - **Property 20: Shopping List Ingredient Consolidation**
   - **Validates: Requirements 7.3**
 
-- [ ] 10.4 Write property test for shopping list categorization
+- [x] 10.4 Write property test for shopping list categorization
   - **Property 21: Shopping List Categorization**
   - **Validates: Requirements 7.4**
 
-- [ ] 11. Implement pantry inventory management
+- [x] 11. Implement pantry inventory management
   - Add methods to add/remove pantry items
   - Implement ingredient consumption tracking
   - Add inventory update on meal plan generation
   - _Requirements: 3.3, 3.4_
 
-- [ ] 11.1 Write property test for ingredient consumption tracking
+- [x] 11.1 Write property test for ingredient consumption tracking
   - **Property 8: Ingredient Consumption Tracking**
   - **Validates: Requirements 3.3**
 
-- [ ] 11.2 Write property test for pantry add/remove operations
+- [x] 11.2 Write property test for pantry add/remove operations
   - **Property 9: Pantry Inventory Add/Remove Operations**
   - **Validates: Requirements 3.4**
 
-- [ ] 12. Implement progress tracking system
+- [x] 12. Implement progress tracking system
   - Create ProgressTracker class with meal and workout completion recording
   - Implement weekly summary aggregation
   - Add adherence percentage calculation
   - Implement progress data persistence
   - _Requirements: 8.1, 8.2, 8.3, 8.4, 8.5_
 
-- [ ] 12.1 Write property test for meal completion recording
+- [x] 12.1 Write property test for meal completion recording
   - **Property 22: Meal Completion Recording**
   - **Validates: Requirements 8.1**
 
-- [ ] 12.2 Write property test for workout completion recording
+- [x] 12.2 Write property test for workout completion recording
   - **Property 23: Workout Completion Recording**
   - **Validates: Requirements 8.2**
 
-- [ ] 12.3 Write property test for weekly progress aggregation
+- [x] 12.3 Write property test for weekly progress aggregation
   - **Property 24: Weekly Progress Aggregation**
   - **Validates: Requirements 8.3**
 
-- [ ] 12.4 Write property test for adherence percentage calculation
+- [x] 12.4 Write property test for adherence percentage calculation
   - **Property 25: Adherence Percentage Calculation**
   - **Validates: Requirements 8.4**
 
-- [ ] 12.5 Write property test for progress data persistence
+- [x] 12.5 Write property test for progress data persistence
   - **Property 26: Progress Data Persistence Round-Trip**
   - **Validates: Requirements 8.5**
 
@@ -330,3 +282,38 @@
 
 - [ ] 18. Final checkpoint - Ensure all tests pass
   - Ensure all tests pass, ask the user if questions arise.
+
+
+- [x] 19. Implement AI Chatbot Engine
+  - Create ChatbotEngine class with intent detection
+  - Implement conversation state management
+  - Add handlers for meal plan requests, workout requests, modifications, and questions
+  - Integrate with MealPlannerEngine and WorkoutPlannerEngine
+  - Add profile update extraction from natural language
+  - _Requirements: 13.1, 13.2, 13.3, 13.4, 13.5, 13.6, 13.7, 13.8, 13.9, 13.10_
+
+- [x] 19.1 Create chatbot API routes
+  - POST /api/chatbot/chat - Send message and get response
+  - GET /api/chatbot/history - Get conversation history
+  - POST /api/chatbot/reset - Reset conversation
+  - GET /api/chatbot/context - Get current context
+  - _Requirements: 13.1, 13.8, 13.9, 13.10_
+
+- [x] 19.2 Add chatbot UI to web interface
+  - Add chatbot tab with message display
+  - Implement chat input form
+  - Add quick action buttons
+  - Style chat bubbles (user/assistant)
+  - Add typing indicator
+  - Implement auto-scroll
+  - _Requirements: 13.1, 13.7_
+
+- [x] 19.3 Write tests for chatbot engine
+  - Test intent detection for all intent types
+  - Test meal plan generation through chat
+  - Test workout plan generation through chat
+  - Test modification requests
+  - Test question answering
+  - Test profile updates from conversation
+  - Test conversation state management
+  - _Requirements: 13.1-13.10_
