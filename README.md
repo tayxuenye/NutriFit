@@ -1,6 +1,6 @@
 # NutriFit
 
-NutriFit is an AI-powered **offline** mobile health assistant that generates personalized meal plans and workout routines based on user dietary preferences, fitness goals, and available ingredients or equipment. Users can receive weekly recommendations, optimize shopping lists, and track progress—all without requiring cloud services or API keys.
+NutriFit is an AI-powered mobile health assistant that generates personalized meal plans and workout routines based on user dietary preferences, fitness goals, and available ingredients or equipment. Users can receive weekly recommendations, optimize shopping lists, and track progress.
 
 ## ✨ Features
 
@@ -12,7 +12,7 @@ NutriFit is an AI-powered **offline** mobile health assistant that generates per
 - **Auto-Generated Shopping Lists**: Automatically generate and update shopping lists from meal plans, organized by week
 - **Progress Tracking**: Track weight, calories, workouts, and more over time
 - **Nutrition & Fitness Q&A**: Ask questions and get personalized answers from the AI assistant
-- **100% Offline**: Works completely offline using local AI models—no cloud or API keys required
+- **Local AI Support**: Works with local AI models or cloud APIs (Ollama, OpenAI, or local models)
 - **Mobile-First Web Interface**: Beautiful, responsive UI optimized for mobile devices
 - **Week-Based Planning**: Navigate between weeks to view and generate plans for any time period
 - **Manual Editing**: Edit meal and workout plans directly in the app
@@ -137,8 +137,9 @@ The web interface exposes RESTful API endpoints:
 - **Flask** - Web framework for RESTful API and web interface
 - **NumPy** - Numerical operations and data processing
 - **sentence-transformers** (optional) - Semantic search and embeddings
-- **transformers + PyTorch** (optional) - Local LLM support (GPT-2)
 - **llama-cpp-python** (optional) - Efficient GGUF model inference
+- **Ollama** (optional) - Local modern LLM support via Ollama service (llama3.2, mistral, phi3, etc.)
+- **openai** (optional) - OpenAI API client for cloud-based LLM support (requires API key)
 
 ### Frontend
 - **HTML5** - Structure and semantic markup
@@ -152,7 +153,10 @@ The web interface exposes RESTful API endpoints:
 
 ### AI/ML
 - **Embedding Engine** - Semantic similarity search for recipes and workouts
-- **Local LLM** - GPT-2 or GGUF models for creative meal/workout suggestions
+- **Local LLM Engine** - GGUF models or GPT-2 (via transformers) for creative suggestions
+- **Chatbot Engine** - Conversational AI for natural language plan creation and modification
+  - Supports Ollama (local modern LLMs), OpenAI API (cloud), or LocalLLMEngine (fallback)
+- **Plan Parser** - Converts LLM-generated text into structured meal/workout plans
 - **Fallback System** - Template-based suggestions when AI models unavailable
 
 ### Architecture Patterns
@@ -166,7 +170,16 @@ The web interface exposes RESTful API endpoints:
 nutrifit/
 ├── models/              # Data models (User, Recipe, Workout, Plan, Progress)
 ├── data/               # Sample recipe and workout databases
-├── engines/            # AI engines (Embedding, LLM, MealPlanner, WorkoutPlanner)
+├── engines/            # AI engines
+│   ├── embedding_engine.py    # Semantic search
+│   ├── llm_engine.py          # Local LLM (GPT-2, GGUF)
+│   ├── ollama_engine.py       # Ollama integration
+│   ├── openai_engine.py       # OpenAI API integration
+│   ├── chatbot_engine.py      # Conversational AI assistant
+│   ├── meal_planner.py        # Meal plan generation
+│   └── workout_planner.py     # Workout plan generation
+├── parsers/            # LLM output parsers
+│   └── plan_parser.py  # Converts text to structured plans
 ├── utils/              # Utilities (ShoppingList, Storage)
 ├── templates/          # Web interface HTML templates
 │   └── index.html      # Main mobile-friendly UI
@@ -179,6 +192,7 @@ nutrifit/
 │       ├── __init__.py # Route registration
 │       ├── main.py     # Main routes (home, test)
 │       ├── profile.py  # Profile management routes
+│       ├── chatbot.py  # Chatbot API routes
 │       ├── meal_plans.py    # Meal plan routes
 │       ├── workout_plans.py # Workout plan routes
 │       ├── shopping.py      # Shopping list routes
@@ -190,7 +204,9 @@ nutrifit/
 ### Key Components
 
 - **EmbeddingEngine**: Uses sentence-transformers for semantic search (falls back to simple matching if not installed)
-- **LocalLLMEngine**: Optional local LLM for creative suggestions (llama-cpp-python)
+- **LocalLLMEngine**: Optional local LLM for creative suggestions (GGUF via llama-cpp-python or GPT-2 via transformers)
+- **ChatbotEngine**: Conversational AI assistant that uses Ollama, OpenAI API, or LocalLLMEngine for natural language plan creation and modification
+- **PlanParser**: Converts LLM-generated text into structured MealPlan and WorkoutPlan objects
 - **MealPlannerEngine**: Generates meal plans based on preferences and nutritional goals
 - **WorkoutPlannerEngine**: Creates workout routines based on fitness goals and equipment
 - **Web Interface**: Modular Flask web app with separate route handlers for each feature
@@ -230,8 +246,10 @@ All data is stored locally in `~/.nutrifit/data/`:
 - NumPy (required)
 - Flask (for web interface)
 - Optional: sentence-transformers (for better AI matching)
-- Optional: transformers + torch (for GPT-2 and other Hugging Face models)
 - Optional: llama-cpp-python (for GGUF model support)
+- Optional: Ollama (for modern local LLMs - install separately from https://ollama.ai)
+- Optional: openai (for OpenAI API support - requires API key)
+- Optional: transformers + torch (auto-installed by LocalLLMEngine if using GPT-2)
 
 Install with optional dependencies:
 
@@ -248,16 +266,28 @@ pip install -e ".[llm]"         # For local LLM support
 
 The app automatically uses a local LLM if available - no configuration needed!
 
-### Option 1: GPT-2 (Easiest - Recommended)
+### Option 1: Ollama (Best Quality - Recommended)
 
-Just install transformers and the app will automatically use GPT-2:
-```bash
-pip install transformers torch
-```
+Ollama provides access to modern, high-quality LLMs like llama3.2, mistral, and phi3.
 
-The app will detect and use GPT-2 on startup - no setup required!
+1. **Install Ollama:**
+   - Visit https://ollama.ai and install for your platform
+   - Or use: `curl -fsSL https://ollama.ai/install.sh | sh` (Linux/Mac)
 
-### Option 2: GGUF Models (More Efficient)
+2. **Pull a model:**
+   ```bash
+   ollama pull llama3.2
+   # Or try: ollama pull mistral
+   # Or try: ollama pull phi3
+   ```
+
+3. **Start Ollama** (usually runs automatically as a service)
+
+4. **Run the app** - it will automatically detect and use Ollama!
+
+The chatbot will use Ollama by default if it's available, providing the best conversational experience.
+
+### Option 2: GGUF Models (Advanced)
 
 1. **Install llama-cpp-python:**
    ```bash
@@ -271,15 +301,43 @@ The app will detect and use GPT-2 on startup - no setup required!
 
 3. **Run the app** - it will automatically detect and use the GGUF model!
 
+**Note:** GPT-2 support is available via transformers (auto-installed by LocalLLMEngine if needed), but GGUF models or Ollama are recommended for better quality.
+
+### Option 3: OpenAI API (Cloud-based)
+
+For cloud-based LLM support with GPT-3.5 or GPT-4:
+
+1. **Install the OpenAI package:**
+   ```bash
+   pip install openai
+   ```
+
+2. **Set your API key:**
+   ```bash
+   # Linux/Mac
+   export OPENAI_API_KEY="your-api-key-here"
+   
+   # Windows PowerShell
+   $env:OPENAI_API_KEY="your-api-key-here"
+   ```
+
+3. **Run the app** - it will automatically use OpenAI if the API key is set!
+
+**Note:** This requires an internet connection and API credits. The app will fall back to local options if the API is unavailable.
+
 The app will gracefully fall back to template-based suggestions if:
 - No model is found
 - Required libraries are not installed
 - The model fails to load
 
-**Priority order:**
-1. GGUF files in `models/` directory (if llama-cpp-python installed)
-2. GPT-2 via transformers (if transformers installed)
-3. Template-based fallback (always available)
+**Priority order (for chatbot and LLM features):**
+1. Ollama (if installed and running - recommended for best results)
+2. OpenAI API (if OPENAI_API_KEY is set and openai package installed)
+3. GGUF files in `models/` directory (if llama-cpp-python installed)
+4. GPT-2 via transformers (auto-installed by LocalLLMEngine if needed)
+5. Template-based fallback (always available)
+
+**Note:** The chatbot engine automatically detects and uses the best available LLM option. Ollama is recommended for the best conversational experience.
 
 ## 🤝 Contributing
 
